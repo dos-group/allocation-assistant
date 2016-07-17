@@ -1,23 +1,29 @@
 package de.tuberlin.cit.allocationassistant
 
+import java.lang.Double
+
 import akka.actor.{Actor, ActorSystem, Address, Props}
 import akka.event.Logging
+import akka.pattern.ask
+import scala.concurrent.duration._
 import com.typesafe.config.Config
+
+import scala.concurrent.Await
+
+case class PreviousRuns(scaleOuts: Array[Integer], runtimes: Array[Double])
 
 /** Utilities for communicating with Freamon */
 class Freamon(config: Config) {
-  private val actorSystemName = config.getString("allocation-assistant.systems.master.name")
+  private val actorSystemName = config.getString("allocation-assistant.actors.system")
   private val actorSystem = ActorSystem(actorSystemName, config)
-  private val actorName = config.getString("allocation-assistant.systems.master.actor")
+  private val actorName = config.getString("allocation-assistant.actors.freamon")
   private val freamonTunnel = actorSystem.actorOf(Props[FreamonTunnel], name = actorName)
 
-  def findSimilarApps(params: Object): Object = {
-    // TODO retrieve similar apps for previous runtimes
-    // freamonTunnel ! FindSimilarApps(params)
-    null
+  def getPreviousRuns(jarWithArgs: String): PreviousRuns = {
+    val future = freamonTunnel ? Array("findPreviousRuns", jarWithArgs)
+    val response = Await.result(future, 5 seconds).asInstanceOf[Array[Any]]
+    PreviousRuns(response(1).asInstanceOf, response(2).asInstanceOf)
   }
-
-  // TODO start/stop messages can be case classes again, now that we depend on Freamon (YarnWorkloadRunner could not)
 
   def sendStart(applicationId: String) {
     freamonTunnel ! Array("jobStarted", applicationId, System.currentTimeMillis())
@@ -34,11 +40,11 @@ class FreamonTunnel extends Actor {
   val config = context.system.settings.config
 
   val masterSystemPath = new Address("akka.tcp",
-    config.getString("allocation-assistant.freamon.actors.systems.master.name"),
+    config.getString("freamon.actors.systems.master.name"),
     config.getString("allocation-assistant.freamon-master.hostname"),
     config.getInt("allocation-assistant.freamon-master.port"))
 
-  val masterActorPath = masterSystemPath.toString + "/user/" + config.getString("allocation-assistant.freamon.actors.systems.master.actor")
+  val masterActorPath = masterSystemPath.toString + "/user/" + config.getString("freamon.actors.systems.master.actor")
 
   val freamonMaster = context.actorSelection(masterActorPath)
 
@@ -50,7 +56,5 @@ class FreamonTunnel extends Actor {
     case msg =>
       freamonMaster.forward(msg)
       log.debug(s"sent $msg")
-
-    // TODO handle responses to our requests (e.g. similar apps for previous runtimes)
   }
 }

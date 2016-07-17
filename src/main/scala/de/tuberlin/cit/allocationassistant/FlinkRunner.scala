@@ -4,19 +4,18 @@ import java.io.File
 
 import scala.sys.process._
 
-class FlinkRunner(conf: ConfigUtil, freamon: Freamon) {
+class FlinkRunner(options: Options, freamon: Freamon) {
 
-  def buildCommand(): String = {
-    "" // TODO build command
+  def runFlink(scaleOut: Int): Int = {
+    val cmd = s"${options.flink} run -m yarn-cluster -yn $scaleOut ${options.args.jarWithArgs()}"
+    val fileOutput = new FlinkLogger(new File(options.cmdLogPath))
+    val envHadoop = "HADOOP_CONF_DIR" -> options.hadoopConfDir
+    val result = Process(cmd, Option.empty, envHadoop) ! fileOutput
+    if (fileOutput.canFinish) freamon.sendStop(fileOutput.appId)
+    result
   }
 
-  def runFlink(resourceAlloc: Any): Int = {
-    val fileOutput = new FilteringLogger(new File(conf.cmdLogPath))
-    val envHadoop = "HADOOP_CONF_DIR" -> conf.hadoopConfDir // TODO would HADOOP_PREFIX work too?
-    Process("cmd", Option.empty, envHadoop) ! fileOutput
-  }
-
-  class FilteringLogger(file: File) extends FileProcessLogger(file) {
+  class FlinkLogger(file: File) extends FileProcessLogger(file) {
     val submitMarker = "Submitted application"
 
     var appId = "no appId"

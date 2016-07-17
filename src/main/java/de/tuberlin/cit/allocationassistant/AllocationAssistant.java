@@ -5,21 +5,22 @@ import java.io.IOException;
 public class AllocationAssistant {
 
 	public static void main(String[] args) throws IOException {
-		// parse arguments: jarFile, jarArguments, initial resource allocation, user constraints (min/max resources, runtime-target)
-		ConfigUtil conf = new ConfigUtil(args);
-		Freamon freamon = new Freamon(conf.akka());
+		Options options = new Options(args);
+		Freamon freamon = new Freamon(options.akka());
 
-		// TODO: compute resources:
-
-		// first get previous runtimes from Freamon,
-		Object prevRuntimes = freamon.findSimilarApps(conf.args());
+		PreviousRuns previousRuns = freamon.getPreviousRuns(options.jarWithArgs());
+		Integer[] scaleOuts = previousRuns.scaleOuts();
+		Double[] runtimes = previousRuns.runtimes();
 
 		// then (if multiple previous runs are available) build model (Ilya's code using JBLAS),
 		// then use model to find scale-out (user target if available and between min-max resource constraints)
-		Object resourceAlloc = null;
+		int scaleOut = computeScaleOut(scaleOuts, runtimes, options.maxRuntime());
 
-		// execute Flink job via Flink's YARN client
-		new FlinkRunner(conf, freamon).runFlink(resourceAlloc);
+		new FlinkRunner(options, freamon).runFlink(scaleOut);
+	}
+
+	private static int computeScaleOut(Integer[] scaleOuts, Double[] runtimes, int maxRuntime) {
+		return 0; // TODO stub
 	}
 
 }
