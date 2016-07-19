@@ -5,6 +5,7 @@ import java.lang.Double
 import akka.actor.{Actor, ActorSystem, Address, Props}
 import akka.event.Logging
 import akka.pattern.ask
+import akka.util.Timeout
 import scala.concurrent.duration._
 import com.typesafe.config.Config
 
@@ -20,8 +21,9 @@ class Freamon(config: Config) {
   private val freamonTunnel = actorSystem.actorOf(Props[FreamonTunnel], name = actorName)
 
   def getPreviousRuns(jarWithArgs: String): PreviousRuns = {
+    implicit val timeout = Timeout(5 seconds)
     val future = freamonTunnel ? Array("findPreviousRuns", jarWithArgs)
-    val response = Await.result(future, 5 seconds).asInstanceOf[Array[Any]]
+    val response = Await.result(future, timeout.duration).asInstanceOf[Array[Any]]
     PreviousRuns(response(1).asInstanceOf, response(2).asInstanceOf)
   }
 

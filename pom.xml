@@ -12,7 +12,7 @@
 
     <properties>
         <!-- Maven Plugins -->
-        <scala-maven-plugin.version>3.1.6</scala-maven-plugin.version>
+        <scala-maven-plugin.version>3.2.0</scala-maven-plugin.version>
         <maven-compiler-plugin.version>2.3.2</maven-compiler-plugin.version>
         <build-helper-maven-plugin.version>1.8</build-helper-maven-plugin.version>
         <maven-shade-plugin.version>2.4.3</maven-shade-plugin.version>
@@ -24,7 +24,7 @@
         <scala.version>2.11.7</scala.version>
         <scala.tools.version>2.10</scala.tools.version>
         <!-- Akka -->
-        <akka.version>2.4.1</akka.version>
+        <akka.version>2.4.8</akka.version>
         <!-- Log4J -->
         <log4j.version>1.2.17</log4j.version>
     </properties>
@@ -163,16 +163,14 @@
                         </includes>
                     </artifactSet>
                     <transformers>
-                        <transformer
-                                implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
                             <resource>reference.conf</resource>
                         </transformer>
-                        <!--<transformer-->
-                        <!--implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">-->
-                        <!--<manifestEntries>-->
-                        <!--<Main-Class>akka.Main</Main-Class>-->
-                        <!--</manifestEntries>-->
-                        <!--</transformer>-->
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <manifestEntries>
+                                <Main-Class>de.tuberlin.cit.allocationassistant.AllocationAssistant</Main-Class>
+                            </manifestEntries>
+                        </transformer>
                     </transformers>
                 </configuration>
                 <executions>
