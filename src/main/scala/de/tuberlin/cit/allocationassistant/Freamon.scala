@@ -43,8 +43,8 @@ class FreamonTunnel extends Actor {
 
   val masterSystemPath = new Address("akka.tcp",
     config.getString("freamon.actors.systems.master.name"),
-    config.getString("allocation-assistant.freamon-master.hostname"),
-    config.getInt("allocation-assistant.freamon-master.port"))
+    config.getString("freamon.hosts.master.hostname"),
+    config.getInt("freamon.hosts.master.port"))
 
   val masterActorPath = masterSystemPath.toString + "/user/" + config.getString("freamon.actors.systems.master.actor")
 
