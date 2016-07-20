@@ -18,11 +18,23 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
   }
 
   val config = opt[String](required = true,
-    descr = "path to the .conf file")
+    descr = "Path to the .conf file")
+
   val maxRuntime = opt[Int](required = true, short = 'r',
-    descr = "maximum runtime in seconds")
-  val initialAllocation = opt[Int](required = true,
-    descr = "if no previous runs are available, this allocation is used")
+    descr = "Maximum runtime in seconds")
+
+  val memory = opt[Int](required = true,
+    descr = "Memory per container, in MB")
+  val slots = opt[Int](required = true,
+    descr = "Number of slots per TaskManager")
+
+  val initialContainers = opt[Int](
+    descr = "If no previous runs are available, this many containers are assigned")
+  val minContainers = opt[Int](short = 'n', default = Option(1),
+    descr = "Minimum number of containers to assign")
+  val maxContainers = opt[Int](short = 'N', default = Option(Int.MaxValue),
+    descr = "Maximum number of containers to assign")
+
   val jarWithArgs = trailArg[List[String]](required = true,
     descr = "Jar to run and its arguments")
 

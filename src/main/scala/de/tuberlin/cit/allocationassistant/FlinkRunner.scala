@@ -7,8 +7,21 @@ import scala.sys.process._
 
 class FlinkRunner(options: Options, freamon: Freamon) {
 
+  /** Executes the application on Flink and triggers Freamon to start/stop recording.
+    *
+    * @param scaleOut number of containers to run the application on,
+    *                 limited by the minContainers and maxContainers arguments
+    */
   def runFlink(scaleOut: Int): Int = {
-    val cmd = s"${options.flink} run -m yarn-cluster -yn $scaleOut ${options.args.jarWithArgs()}"
+    val limitedScaleOut = Math.max(options.args.minContainers(),
+      Math.min(options.args.maxContainers(), scaleOut))
+
+    // TODO set #slots from args
+    val cmd = s"${options.flink} run -m yarn-cluster" +
+      s" -yn $limitedScaleOut" +
+      s" -ytm ${options.args.memory()}" +
+      s" ${options.args.jarWithArgs()}"
+
     val logPath = options.cmdLogPath + File.pathSeparator + Instant.now()
     val fileOutput = new FlinkLogger(new File(logPath))
     val envHadoop = "HADOOP_CONF_DIR" -> options.hadoopConfDir
