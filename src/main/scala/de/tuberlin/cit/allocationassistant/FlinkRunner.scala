@@ -1,6 +1,7 @@
 package de.tuberlin.cit.allocationassistant
 
 import java.io.File
+import java.time.Instant
 
 import scala.sys.process._
 
@@ -8,7 +9,8 @@ class FlinkRunner(options: Options, freamon: Freamon) {
 
   def runFlink(scaleOut: Int): Int = {
     val cmd = s"${options.flink} run -m yarn-cluster -yn $scaleOut ${options.args.jarWithArgs()}"
-    val fileOutput = new FlinkLogger(new File(options.cmdLogPath))
+    val logPath = options.cmdLogPath + File.pathSeparator + Instant.now()
+    val fileOutput = new FlinkLogger(new File(logPath))
     val envHadoop = "HADOOP_CONF_DIR" -> options.hadoopConfDir
     val result = Process(cmd, Option.empty, envHadoop) ! fileOutput
     if (fileOutput.canFinish) freamon.sendStop(fileOutput.appId)
