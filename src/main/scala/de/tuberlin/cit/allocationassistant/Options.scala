@@ -9,6 +9,9 @@ import org.rogach.scallop.exceptions.ScallopException
 class Args(a: Seq[String]) extends ScallopConf(a) {
   override def onError(e: Throwable): Unit = e match {
     case ScallopException(message) =>
+      println(message)
+      println(s"Usage: allocation-assistant -c <config> -r <max runtime> -m <memory> -s <slots>" +
+        s" [more args ...] <Jar> [Jar args ...]\n")
       printHelp()
       System.exit(1)
     case other => throw other
