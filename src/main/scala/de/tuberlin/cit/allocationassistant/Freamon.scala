@@ -5,7 +5,7 @@ import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.Config
-import de.tuberlin.cit.freamon.api.PreviousRuns
+import de.tuberlin.cit.freamon.api._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -19,16 +19,16 @@ class Freamon(config: Config) {
 
   def getPreviousRuns(jarWithArgs: String): PreviousRuns = {
     implicit val timeout = Timeout(5 seconds)
-    val future = freamonTunnel ? Array("findPreviousRuns", jarWithArgs)
+    val future = freamonTunnel ? FindPreviousRuns(jarWithArgs)
     Await.result(future, timeout.duration).asInstanceOf[PreviousRuns]
   }
 
-  def sendStart(applicationId: String) {
-    freamonTunnel ! Array("jobStarted", applicationId, System.currentTimeMillis())
+  def sendStart(applicationId: String, signature: String, cores: Int, mem: Int) {
+    freamonTunnel ! ApplicationStart(applicationId, System.currentTimeMillis(), signature, cores, mem)
   }
 
   def sendStop(applicationId: String) {
-    freamonTunnel ! Array("jobStopped", applicationId, System.currentTimeMillis())
+    freamonTunnel ! ApplicationStop(applicationId, System.currentTimeMillis())
   }
 }
 

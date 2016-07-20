@@ -50,7 +50,7 @@ class FlinkRunner(options: Options, freamon: Freamon) {
         (line.contains("Job execution switched to status RUNNING")
           || line.contains("All TaskManagers are connected"))) {
         startTime = System.currentTimeMillis()
-        freamon.sendStart(appId)
+        freamon.sendStart(appId, options.jarWithArgs, options.args.slots(), options.args.memory())
         println(s"$appId started")
         canStart = false
         canFinish = true
