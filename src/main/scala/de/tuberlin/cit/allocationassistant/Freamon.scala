@@ -1,17 +1,14 @@
 package de.tuberlin.cit.allocationassistant
 
-import java.lang.Double
-
 import akka.actor.{Actor, ActorSystem, Address, Props}
 import akka.event.Logging
 import akka.pattern.ask
 import akka.util.Timeout
-import scala.concurrent.duration._
 import com.typesafe.config.Config
+import de.tuberlin.cit.freamon.api.PreviousRuns
 
 import scala.concurrent.Await
-
-case class PreviousRuns(scaleOuts: Array[Integer], runtimes: Array[Double])
+import scala.concurrent.duration._
 
 /** Utilities for communicating with Freamon */
 class Freamon(config: Config) {
@@ -23,8 +20,7 @@ class Freamon(config: Config) {
   def getPreviousRuns(jarWithArgs: String): PreviousRuns = {
     implicit val timeout = Timeout(5 seconds)
     val future = freamonTunnel ? Array("findPreviousRuns", jarWithArgs)
-    val response = Await.result(future, timeout.duration).asInstanceOf[Array[Any]]
-    PreviousRuns(response(1).asInstanceOf, response(2).asInstanceOf)
+    Await.result(future, timeout.duration).asInstanceOf[PreviousRuns]
   }
 
   def sendStart(applicationId: String) {

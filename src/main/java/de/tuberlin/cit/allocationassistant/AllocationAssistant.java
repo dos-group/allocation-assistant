@@ -1,5 +1,7 @@
 package de.tuberlin.cit.allocationassistant;
 
+import de.tuberlin.cit.freamon.api.PreviousRuns;
+
 import java.io.IOException;
 
 public class AllocationAssistant {
