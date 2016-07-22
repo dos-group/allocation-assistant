@@ -21,12 +21,22 @@ class FlinkRunner(options: Options, freamon: Freamon) {
       s" -yn $limitedScaleOut" +
       s" -ytm ${options.args.memory()}" +
       s" ${options.args.jarWithArgs()}"
+    println(s"Executing command $cmd")
 
-    val logPath = options.cmdLogPath + File.pathSeparator + Instant.now()
+    val logPath = options.cmdLogPath + File.separator + Instant.now()
+    println(s"Saving command output to $logPath")
+
+    new File(options.cmdLogPath).mkdirs()
     val fileOutput = new FlinkLogger(new File(logPath))
     val envHadoop = "HADOOP_CONF_DIR" -> options.hadoopConfDir
+
     val result = Process(cmd, Option.empty, envHadoop) ! fileOutput
-    if (fileOutput.canFinish) freamon.sendStop(fileOutput.appId)
+
+    if (fileOutput.canFinish) {
+      println("Job did not finish, stopping Freamon manually")
+      freamon.sendStop(fileOutput.appId)
+    }
+
     result
   }
 
