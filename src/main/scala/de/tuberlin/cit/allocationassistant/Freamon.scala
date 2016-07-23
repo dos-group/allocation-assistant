@@ -57,8 +57,6 @@ class FreamonTunnel extends Actor {
   }
 
   def receive = {
-    case msg =>
-      freamonMaster.forward(msg)
-      log.debug(s"sent $msg")
+    case msg => freamonMaster.forward(msg)
   }
 }
