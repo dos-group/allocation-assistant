@@ -14,7 +14,7 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
         s" [more args ...] <Jar> [Jar args ...]\n")
       printHelp()
       System.exit(1)
-    case other => throw other
+    case other => super.onError(e)
   }
 
   val config = opt[String](required = true,
@@ -35,7 +35,7 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
   val maxContainers = opt[Int](short = 'N', default = Option(Int.MaxValue),
     descr = "Maximum number of containers to assign")
 
-  val rawJarWithArgs = trailArg[List[String]](required = true, name = "jarWithArgs",
+  val rawJarWithArgs = trailArg[List[String]](required = true, name = "xy.jar [arg1 arg2 ...]",
     descr = "Jar to run and its arguments")
 
   verify()
