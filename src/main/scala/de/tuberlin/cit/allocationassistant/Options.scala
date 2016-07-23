@@ -35,7 +35,7 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
   val maxContainers = opt[Int](short = 'N', default = Option(Int.MaxValue),
     descr = "Maximum number of containers to assign")
 
-  val jarWithArgs = trailArg[List[String]](required = true,
+  val rawJarWithArgs = trailArg[List[String]](required = true, name = "jarWithArgs",
     descr = "Jar to run and its arguments")
 
   verify()
@@ -44,9 +44,10 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
 class Options(rawArgs: Array[String]) {
   val args = new Args(rawArgs)
 
+  val jarWithArgs = args.rawJarWithArgs().mkString(" ")
+
   // easier to access from java
   val maxRuntime = args.maxRuntime()
-  val jarWithArgs = args.jarWithArgs().mkString(" ")
 
   println(s"Loading configuration at ${args.config()}")
   // configuration from the file passed as argument, with defaults from application.conf

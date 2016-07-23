@@ -20,7 +20,7 @@ class FlinkRunner(options: Options, freamon: Freamon) {
     val cmd = s"${options.flink} run -m yarn-cluster" +
       s" -yn $limitedScaleOut" +
       s" -ytm ${options.args.memory()}" +
-      s" ${options.args.jarWithArgs()}"
+      s" ${options.jarWithArgs}"
     println(s"Executing command $cmd")
 
     val logPath = options.cmdLogPath + File.separator + Instant.now()
