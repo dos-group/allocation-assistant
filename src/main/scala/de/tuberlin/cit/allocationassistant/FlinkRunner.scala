@@ -3,6 +3,8 @@ package de.tuberlin.cit.allocationassistant
 import java.io.File
 import java.time.Instant
 
+import de.tuberlin.cit.freamon.api.{ApplicationStart, ApplicationStop}
+
 import scala.sys.process._
 
 class FlinkRunner(options: Options, freamon: Freamon) {
@@ -34,7 +36,7 @@ class FlinkRunner(options: Options, freamon: Freamon) {
 
     if (fileOutput.canFinish) {
       println("Job did not finish, stopping Freamon manually")
-      freamon.sendStop(fileOutput.appId)
+      freamon.freamonMaster ! ApplicationStop(fileOutput.appId, System.currentTimeMillis())
     }
 
     result
@@ -59,9 +61,13 @@ class FlinkRunner(options: Options, freamon: Freamon) {
       if (canStart &&
         (line.contains("Job execution switched to status RUNNING")
           || line.contains("All TaskManagers are connected"))) {
+
         startTime = System.currentTimeMillis()
-        freamon.sendStart(appId, options.jarWithArgs, options.args.slots(), options.args.memory())
+        freamon.freamonMaster ! ApplicationStart(
+          appId, startTime, options.jarWithArgs, options.args.slots(), options.args.memory())
+
         println(s"$appId started")
+
         canStart = false
         canFinish = true
       }
@@ -70,9 +76,12 @@ class FlinkRunner(options: Options, freamon: Freamon) {
         (line.contains("Job execution switched to status FINISHED")
           || line.contains("The following messages were " +
           "created by the YARN cluster while running the Job:"))) {
-        freamon.sendStop(appId)
-        val duration = (System.currentTimeMillis() - startTime) / 1000
+
+        freamon.freamonMaster ! ApplicationStop(appId, System.currentTimeMillis())
+
+        val duration = (System.currentTimeMillis() - startTime) / 1000f
         println(s"$appId finished, took $duration seconds")
+
         canFinish = false
       }
 

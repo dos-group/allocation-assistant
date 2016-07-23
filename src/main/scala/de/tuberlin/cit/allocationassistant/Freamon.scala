@@ -34,13 +34,4 @@ class Freamon(config: Config) {
         throw e
     }
   }
-
-  def sendStart(applicationId: String, signature: String, cores: Int, mem: Int) {
-    freamonMaster ! ApplicationStart(applicationId, System.currentTimeMillis(), signature, cores, mem)
-  }
-
-  def sendStop(applicationId: String) {
-    freamonMaster ! ApplicationStop(applicationId, System.currentTimeMillis())
-  }
-
 }
