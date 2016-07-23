@@ -20,7 +20,7 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
   val config = opt[String](required = true,
     descr = "Path to the .conf file")
 
-  val maxRuntime = opt[Int](required = true, short = 'r',
+  val maxRuntime = opt[Double](required = true, short = 'r',
     descr = "Maximum runtime in seconds")
 
   val memory = opt[Int](required = true,
@@ -45,9 +45,6 @@ class Options(rawArgs: Array[String]) {
   val args = new Args(rawArgs)
 
   val jarWithArgs = args.rawJarWithArgs().mkString(" ")
-
-  // easier to access from java
-  val maxRuntime = args.maxRuntime()
 
   println(s"Loading configuration at ${args.config()}")
   // configuration from the file passed as argument, with defaults from application.conf

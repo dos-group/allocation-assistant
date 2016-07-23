@@ -16,9 +16,16 @@ public class AllocationAssistant {
 
 		System.out.println("found " + scaleOuts.length + " runs with signature " + options.jarWithArgs());
 
-		// then (if multiple previous runs are available) build model (Ilya's code using JBLAS),
-		// then use model to find scale-out (user target if available and between min-max resource constraints)
-		int scaleOut = computeScaleOut(scaleOuts, runtimes, options.maxRuntime());
+		int scaleOut;
+		if (scaleOuts.length < 2) {
+			// throws if this arg was not supplied
+			scaleOut = ((Integer) options.args().initialContainers().apply());
+			System.out.println("Using initial scaleOut of " + scaleOut + " from -i argument");
+		} else {
+			// build and use model to find scale-out (user target if available and between min-max resource constraints)
+			scaleOut = computeScaleOut(scaleOuts, runtimes, options);
+			System.out.println("Using computed scaleOut of " + scaleOut);
+		}
 
 		new FlinkRunner(options, freamon).runFlink(scaleOut);
 
@@ -26,7 +33,7 @@ public class AllocationAssistant {
 		System.exit(0);
 	}
 
-	private static int computeScaleOut(Integer[] scaleOuts, Double[] runtimes, int maxRuntime) {
+	private static int computeScaleOut(Integer[] scaleOuts, Double[] runtimes, Options options) {
 		return 0; // TODO stub
 	}
 
