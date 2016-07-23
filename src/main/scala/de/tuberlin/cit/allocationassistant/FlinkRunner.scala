@@ -1,26 +1,56 @@
 package de.tuberlin.cit.allocationassistant
 
 import java.io.File
+import java.time.Instant
+
+import de.tuberlin.cit.freamon.api.{ApplicationStart, ApplicationStop}
 
 import scala.sys.process._
 
-class FlinkRunner(conf: ConfigUtil, freamon: Freamon) {
+class FlinkRunner(options: Options, freamon: Freamon) {
 
-  def buildCommand(): String = {
-    "" // TODO build command
+  /** Executes the application on Flink and triggers Freamon to start/stop recording.
+    *
+    * @param scaleOut number of containers to run the application on,
+    *                 limited by the minContainers and maxContainers arguments
+    */
+  def runFlink(scaleOut: Int): Int = {
+    val limitedScaleOut = Math.max(options.args.minContainers(),
+      Math.min(options.args.maxContainers(), scaleOut))
+
+    // TODO set #slots from args
+    val cmd = s"${options.flink} run -m yarn-cluster" +
+      s" -yn $limitedScaleOut" +
+      s" -ytm ${options.args.memory()}" +
+      s" ${options.jarWithArgs}"
+    println(s"Executing command $cmd")
+
+    val logPath = options.cmdLogPath + File.separator + Instant.now()
+    println(s"Saving command output to $logPath")
+
+    new File(options.cmdLogPath).mkdirs()
+    val fileOutput = new FlinkLogger(new File(logPath))
+    val envHadoop = "HADOOP_CONF_DIR" -> options.hadoopConfDir
+
+    val result = Process(cmd, Option.empty, envHadoop) ! fileOutput
+
+    if (fileOutput.canFinish) {
+      println("Job did not finish, stopping Freamon manually")
+      freamon.freamonMaster ! ApplicationStop(fileOutput.appId, System.currentTimeMillis())
+    }
+
+    result
   }
 
-  def runFlink(resourceAlloc: Any): Int = {
-    val fileOutput = new FilteringLogger(new File(conf.cmdLogPath))
-    val envHadoop = "HADOOP_CONF_DIR" -> conf.hadoopConfDir
-    Process("cmd", Option.empty, envHadoop) ! fileOutput
-  }
-
-  class FilteringLogger(file: File) extends FileProcessLogger(file) {
+  class FlinkLogger(file: File) extends FileProcessLogger(file) {
     val submitMarker = "Submitted application"
 
-    var appId: String = null
-    var running = false
+    var appId = "no appId"
+    var startTime = 0L
+
+    // the marker text could appear several times, we only trigger the first time
+    var canStart = true
+    var canFinish = false
 
     override def out(line: => String) {
       if (line.contains(submitMarker)) {
@@ -28,11 +58,31 @@ class FlinkRunner(conf: ConfigUtil, freamon: Freamon) {
           .replace(submitMarker, "").trim
       }
 
-      if (!running &&
+      if (canStart &&
         (line.contains("Job execution switched to status RUNNING")
           || line.contains("All TaskManagers are connected"))) {
-        freamon.sendStart(appId)
+
+        startTime = System.currentTimeMillis()
+        freamon.freamonMaster ! ApplicationStart(
+          appId, startTime, options.jarWithArgs, options.args.slots(), options.args.memory())
+
         println(s"$appId started")
+
+        canStart = false
+        canFinish = true
+      }
+
+      if (canFinish &&
+        (line.contains("Job execution switched to status FINISHED")
+          || line.contains("The following messages were " +
+          "created by the YARN cluster while running the Job:"))) {
+
+        freamon.freamonMaster ! ApplicationStop(appId, System.currentTimeMillis())
+
+        val duration = (System.currentTimeMillis() - startTime) / 1000f
+        println(s"$appId finished, took $duration seconds")
+
+        canFinish = false
       }
 
       super.out(line)

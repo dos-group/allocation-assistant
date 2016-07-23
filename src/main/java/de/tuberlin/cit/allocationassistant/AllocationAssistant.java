@@ -2,6 +2,7 @@ package de.tuberlin.cit.allocationassistant;
 
 import de.tuberlin.cit.allocationassistant.regression.SimpleLinearRegression;
 import de.tuberlin.cit.allocationassistant.regression.SimpleLinearRegressionModel;
+import de.tuberlin.cit.freamon.api.PreviousRuns;
 import org.jblas.DoubleMatrix;
 
 import java.io.IOException;
@@ -9,34 +10,34 @@ import java.io.IOException;
 public class AllocationAssistant {
 
 	public static void main(String[] args) throws IOException {
-		// parse arguments: jarFile, jarArguments, initial resource allocation, user constraints (min/max resources, runtime-target)
-		ConfigUtil conf = new ConfigUtil(args);
-		Freamon freamon = new Freamon(conf.akka());
+		Options options = new Options(args);
+		Freamon freamon = new Freamon(options.akka());
 
-		// TODO: compute resources:
+		PreviousRuns previousRuns = freamon.getPreviousRuns(options.jarWithArgs());
+		Integer[] scaleOuts = previousRuns.scaleOuts();
+		Double[] runtimes = previousRuns.runtimes();
 
-		// first get previous runtimes from Freamon,
-		Object prevRuntimes = freamon.findSimilarApps(conf.args());
+		System.out.println("found " + scaleOuts.length + " runs with signature " + options.jarWithArgs());
 
-		// runtime data
-		//int[] scaleOuts = null;
-		//double[] runtimes = null;
+		int scaleOut;
+		if (scaleOuts.length < 2) {
+			// throws if this arg was not supplied
+			scaleOut = ((Integer) options.args().initialContainers().apply());
+			System.out.println("Using initial scaleOut of " + scaleOut + " from -i argument");
+		} else {
+			// build and use model to find scale-out (user target if available and between min-max resource constraints)
+			scaleOut = computeScaleOut(scaleOuts, runtimes, options);
+			// TODO apply limit here instead of when building command
+			System.out.println("Computed scaleOut of " + scaleOut);
+		}
 
-		// constraint
-		//double maxRuntime = 0;
+		new FlinkRunner(options, freamon).runFlink(scaleOut);
 
-		//int scaleOut = computeScaleOut(scaleOuts, runtimes, maxRuntime);
-
-
-		// then (if multiple previous runs are available) build model (Ilya's code using JBLAS),
-		// then use model to find scale-out (user target if available and between min-max resource constraints)
-		Object resourceAlloc = null;
-
-		// execute Flink job via Flink's YARN client
-		new FlinkRunner(conf, freamon).runFlink(resourceAlloc);
+		// terminate the application, or else akka will keep it alive
+		System.exit(0);
 	}
 
-	private static int computeScaleOut(int[] scaleOuts, double[] runtimes, double maxRuntime) {
+	private static int computeScaleOut(Integer[] scaleOuts, Double[] runtimes, Options options) {
 		// construct model
 		SimpleLinearRegressionModel model = x -> {
 			DoubleMatrix X = DoubleMatrix.ones(x.rows, 2);
@@ -50,7 +51,10 @@ public class AllocationAssistant {
 		for (int i = 0; i < scaleOuts.length; i++) {
 			x.put(i, scaleOuts[i]);
 		}
-		DoubleMatrix y = new DoubleMatrix(runtimes);
+		DoubleMatrix y = new DoubleMatrix(scaleOuts.length);
+		for (int i = 0; i < runtimes.length; i++) {
+			y.put(i, runtimes[i]);
+		}
 
 		// train model
 		regression.fit(x, y);
@@ -61,8 +65,10 @@ public class AllocationAssistant {
 		double b = coeffs.get(1);
 
 		// calculate scale-out
+		double maxRuntime = ((Double) options.args().maxRuntime().apply());
 		if (maxRuntime < a) {
-			return -1; // impossible to fulfill constraint
+			throw new IllegalArgumentException(String.format(
+					"impossible to fulfill runtime constraint %s, need at least %s", maxRuntime, a));
 		}
 		return (int) Math.ceil(b / (maxRuntime - a));
 	}
