@@ -20,7 +20,13 @@ class Freamon(config: Config) {
   def getPreviousRuns(jarWithArgs: String): PreviousRuns = {
     implicit val timeout = Timeout(5 seconds)
     val future = freamonTunnel ? FindPreviousRuns(jarWithArgs)
-    Await.result(future, timeout.duration).asInstanceOf[PreviousRuns]
+    try {
+      Await.result(future, timeout.duration).asInstanceOf[PreviousRuns]
+    } catch {
+      case e: java.util.concurrent.TimeoutException =>
+        println(s"Freamon did not respond with PreviousRuns after $timeout")
+        throw e
+    }
   }
 
   def sendStart(applicationId: String, signature: String, cores: Int, mem: Int) {
