@@ -15,12 +15,9 @@ class FlinkRunner(options: Options, freamon: Freamon) {
     *                 limited by the minContainers and maxContainers arguments
     */
   def runFlink(scaleOut: Int): Int = {
-    val limitedScaleOut = Math.max(options.args.minContainers(),
-      Math.min(options.args.maxContainers(), scaleOut))
-
     // TODO set #slots from args
     val cmd = s"${options.flink} run -m yarn-cluster" +
-      s" -yn $limitedScaleOut" +
+      s" -yn $scaleOut" +
       s" -ytm ${options.args.memory()}" +
       s" ${options.jarWithArgs}"
     println(s"Executing command $cmd")

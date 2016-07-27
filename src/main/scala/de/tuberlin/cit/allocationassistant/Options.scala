@@ -61,4 +61,16 @@ class Options(rawArgs: Array[String]) {
   val cmdLogPath = conf.getString("allocation-assistant.flink-logs")
   val hadoopConfDir: String = System.getenv("HADOOP_PREFIX") + "/etc/hadoop/"
 
+  /** Applies each of the limits {min,max}Containers (if given in args) to a scale-out
+    *
+    * @param scaleOut the scale-out to apply the limits to
+    * @return scale-out with all given limits applied
+    */
+  def applyScaleOutLimits(scaleOut: Int): Int = {
+    var limitedScaleOut = scaleOut
+    limitedScaleOut = Math.max(scaleOut, args.minContainers.orElse(Option(scaleOut))())
+    limitedScaleOut = Math.min(scaleOut, args.maxContainers.orElse(Option(scaleOut))())
+    limitedScaleOut
+  }
+
 }

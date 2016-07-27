@@ -20,14 +20,13 @@ public class AllocationAssistant {
 		if (scaleOuts.length < 2) {
 			// throws if this arg was not supplied
 			scaleOut = ((Integer) options.args().initialContainers().apply());
-			System.out.println("Using initial scaleOut of " + scaleOut + " from -i argument");
 		} else {
 			// build and use model to find scale-out (user target if available and between min-max resource constraints)
 			ScaleOutPredictor predictor = new ScaleOutPredictor();
 			scaleOut = predictor.computeScaleOut(scaleOuts, runtimes, (Double) options.args().maxRuntime().apply());
-			// TODO apply limit here instead of when building command
-			System.out.println("Computed scaleOut of " + scaleOut);
 		}
+		scaleOut = options.applyScaleOutLimits(scaleOut);
+		System.out.println("Using scaleOut of " + scaleOut);
 
 		new FlinkRunner(options, freamon).runFlink(scaleOut);
 
