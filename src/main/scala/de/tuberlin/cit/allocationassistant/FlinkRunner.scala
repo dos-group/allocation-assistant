@@ -56,6 +56,7 @@ class FlinkRunner(options: Options, freamon: Freamon) {
       if (line.contains(submitMarker)) {
         appId = line.substring(line.indexOf(submitMarker))
           .replace(submitMarker, "").trim
+        println(line) // both informative and for Yarn-Workload-Runner
       }
 
       if (canStart &&
@@ -66,7 +67,7 @@ class FlinkRunner(options: Options, freamon: Freamon) {
         freamon.freamonMaster ! ApplicationStart(
           appId, startTime, options.jarWithArgs, options.args.slots(), options.args.memory())
 
-        println(s"$appId started")
+        println("Job started as " + appId)
 
         canStart = false
         canFinish = true
@@ -80,7 +81,7 @@ class FlinkRunner(options: Options, freamon: Freamon) {
         freamon.freamonMaster ! ApplicationStop(appId, System.currentTimeMillis())
 
         val duration = (System.currentTimeMillis() - startTime) / 1000f
-        println(s"$appId finished, took $duration seconds")
+        println(s"Job finished, took $duration seconds")
 
         canFinish = false
       }
