@@ -1,7 +1,8 @@
 package de.tuberlin.cit.allocationassistant.regression;
 
-import org.jblas.DoubleMatrix;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.DenseVector;
 
 public interface SimpleLinearRegressionModel {
-    DoubleMatrix map(DoubleMatrix x);
+    DenseMatrix map(DenseVector x);
 }

@@ -1,8 +1,9 @@
 package de.tuberlin.cit.allocationassistant.regression;
 
-import org.jblas.DoubleMatrix;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.DenseVector;
 
 public interface Predictor {
-    void fit(DoubleMatrix x, DoubleMatrix y);
-    DoubleMatrix predict(DoubleMatrix x);
+    void fit(DenseMatrix x, DenseVector y);
+    DenseVector predict(DenseMatrix x);
 }

@@ -1,6 +1,7 @@
 package de.tuberlin.cit.allocationassistant.regression;
 
-import org.jblas.DoubleMatrix;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.DenseVector;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -8,13 +9,17 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class SimpleLinearRegressionTest {
+    private SimpleLinearRegressionModel model;
     private SimpleLinearRegression regression;
 
     @Before
     public void setUp() throws Exception {
-        SimpleLinearRegressionModel model = x -> {
-            DoubleMatrix X = DoubleMatrix.ones(x.rows, 2);
-            X.putColumn(1, x.rdiv(1.));
+        model = x -> {
+            DenseMatrix X = new DenseMatrix(x.size(), 2);
+            for (int i = 0; i < x.size(); i++) {
+                X.set(i, 0, 1);
+                X.set(i, 1, 1./x.get(i));
+            }
             return X;
         };
         regression = new SimpleLinearRegression(model);
@@ -22,9 +27,9 @@ public class SimpleLinearRegressionTest {
 
     @Test
     public void testFit() throws Exception {
-        DoubleMatrix x = new DoubleMatrix(new double[] {1, 2, 3, 4});
-        DoubleMatrix X = DoubleMatrix.concatHorizontally(DoubleMatrix.ones(x.length), x);
-        DoubleMatrix y = new DoubleMatrix(new double[] {4, 4, 3, 1});
+        DenseVector x = new DenseVector(new double[] {1, 2, 3, 4});
+        DenseMatrix X = model.map(x);
+        DenseVector y = new DenseVector(new double[] {4, 4, 3, 1});
 
         try {
             regression.fit(X, y);
@@ -35,13 +40,13 @@ public class SimpleLinearRegressionTest {
 
     @Test
     public void testPredict() throws Exception {
-        DoubleMatrix x = new DoubleMatrix(new double[] {1, 2, 3, 4});
-        DoubleMatrix y = new DoubleMatrix(new double[] {4, 4, 3, 1});
+        DenseVector x = new DenseVector(new double[] {1, 2, 3, 4});
+        DenseVector y = new DenseVector(new double[] {4, 4, 3, 1});
 
         regression.fit(x, y);
 
-        DoubleMatrix yPred = regression.predict(x);
-        DoubleMatrix yPredTrue = new DoubleMatrix(new double[] {
+        DenseVector yPred = regression.predict(x);
+        DenseVector yPredTrue = new DenseVector(new double[] {
                 4.415384615384612,
                 2.9384615384615365,
                 2.4461538461538446,
@@ -53,13 +58,13 @@ public class SimpleLinearRegressionTest {
 
     @Test
     public void testGetCoefficients() throws Exception {
-        DoubleMatrix x = new DoubleMatrix(new double[] {1, 2, 3, 4});
-        DoubleMatrix y = new DoubleMatrix(new double[] {4, 4, 3, 1});
+        DenseVector x = new DenseVector(new double[] {1, 2, 3, 4});
+        DenseVector y = new DenseVector(new double[] {4, 4, 3, 1});
 
         regression.fit(x, y);
 
-        DoubleMatrix w = regression.getCoefficients();
-        DoubleMatrix wTrue = new DoubleMatrix(new double[] {1.4615384615384603, 2.9538461538461522});
+        DenseVector w = regression.getCoefficients();
+        DenseVector wTrue = new DenseVector(new double[] {1.4615384615384603, 2.9538461538461522});
 
         assertTrue(Utils.allClose(w, wTrue));
     }

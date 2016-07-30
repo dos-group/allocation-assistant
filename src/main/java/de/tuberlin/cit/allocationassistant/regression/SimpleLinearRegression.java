@@ -1,6 +1,8 @@
 package de.tuberlin.cit.allocationassistant.regression;
 
-import org.jblas.DoubleMatrix;
+import no.uib.cipr.matrix.DenseMatrix;
+import no.uib.cipr.matrix.DenseVector;
+import no.uib.cipr.matrix.Matrices;
 
 /**
  * This class fits a function to a one-dimensional data set.
@@ -11,23 +13,26 @@ import org.jblas.DoubleMatrix;
  * <pre>
  *     // define quadratic model, i.e. y = a + b x + c x^2
  *     SimpleLinearRegressionModel model = x -> {
- *         DoubleMatrix X = DoubleMatrix.ones(x.rows, 3);
- *         X.putColumn(1, x);
- *         X.putColumn(2, x.mul(x));
+ *         DenseMatrix X = new DenseMatrix(x.size(), 2);
+ *         for (int i = 0; i < x.size(); i++) {
+ *             X.set(i, 0, 1);
+ *             X.set(i, 1, 1./x.get(i));
+ *         }
  *         return X;
  *     };
+ *
  *     SimpleLinearRegression regression = new SimpleLinearRegression(model);
  *
- *     DoubleMatrix x = new DoubleMatrix(new double[] {-2, -1, 1, 2});
- *     DoubleMatrix y = new DoubleMatrix(new double[] {4.3, 1.8, 2.1, 3.7});
+ *     DenseVector x = new DenseVector(new double[] {-2, -1, 1, 2});
+ *     DenseVector y = new DenseVector(new double[] {4.3, 1.8, 2.1, 3.7});
  *
  *     regression.fit(x, y);
- *     DoubleMatrix coeffs = regression.getCoefficients();
- *     coeffs.print(); // [1.266667; -0.090000; 0.683333]
- *                     // i.e. y = 1.266667 - 0.090000 x + 0.683333 x^2
+ *     DenseVector coeffs = regression.getCoefficients();
+ *     // coeffs = [1.266667; -0.090000; 0.683333]
+ *     // i.e. y = 1.266667 - 0.090000 x + 0.683333 x^2
  *
- *     DoubleMatrix yPred = regression.predict(x);
- *     yPred.print(); // [4.180000; 2.040000; 1.860000; 3.820000]
+ *     DenseVector yPred = regression.predict(x);
+ *     // yPred = [4.180000; 2.040000; 1.860000; 3.820000]
  * </pre>
  */
 public class SimpleLinearRegression implements Predictor {
@@ -50,10 +55,21 @@ public class SimpleLinearRegression implements Predictor {
      * @param x shape (n,1), a column vector containing the one-dimensional data samples.
      * @param y shape (n,1), a column vector containing the target values.
      */
-    public void fit(DoubleMatrix x, DoubleMatrix y) {
-        Utils.checkVector(x);
-        DoubleMatrix X = model.map(x);
+    public void fit(DenseVector x, DenseVector y) {
+        DenseMatrix X = model.map(x);
         regression.fit(X, y);
+    }
+
+    /**
+     * Fits a function to the training data.
+     *
+     * @param x shape (n,1), a column vector containing the one-dimensional data samples.
+     * @param y shape (n,1), a column vector containing the target values.
+     */
+    public void fit(DenseMatrix x, DenseVector y) {
+        Utils.checkColumnVector(x);
+        DenseVector xvec = Matrices.getColumn(x, 0);
+        fit(xvec, y);
     }
 
     /**
@@ -63,7 +79,9 @@ public class SimpleLinearRegression implements Predictor {
      * @return the prediction.
      */
     public double predict(double x) {
-        return predict(DoubleMatrix.scalar(x)).scalar();
+        DenseVector xvec = new DenseVector(new double[]{x});
+        DenseVector result = predict(xvec);
+        return result.get(0);
     }
 
     /**
@@ -73,10 +91,22 @@ public class SimpleLinearRegression implements Predictor {
      *          for which the target value is predicted
      * @return shape (n,1), a column vector containing the prediction values.
      */
-    public DoubleMatrix predict(DoubleMatrix x) {
-        Utils.checkVector(x);
-        DoubleMatrix X = model.map(x);
+    public DenseVector predict(DenseVector x) {
+        DenseMatrix X = model.map(x);
         return regression.predict(X);
+    }
+
+    /**
+     * Predicts the values for the given set of values.
+     *
+     * @param x shape (n,1), a column vector containing the one-dimensional data sample
+     *          for which the target value is predicted
+     * @return shape (n,1), a column vector containing the prediction values.
+     */
+    public DenseVector predict(DenseMatrix x) {
+        Utils.checkColumnVector(x);
+        DenseVector xvec = Matrices.getColumn(x, 0);
+        return predict(xvec);
     }
 
     /**
@@ -84,7 +114,7 @@ public class SimpleLinearRegression implements Predictor {
      *
      * @return shape (d,1), a column vector containing the coefficients.
      */
-    public DoubleMatrix getCoefficients() {
+    public DenseVector getCoefficients() {
         return regression.getCoefficients();
     }
 }
