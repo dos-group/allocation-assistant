@@ -83,7 +83,7 @@ class FlinkRunner(options: Options, freamon: Freamon) {
         canFinish = false
       }
 
-      super.out(line)
+      super[FileProcessLogger].out(line)
     }
   }
 
