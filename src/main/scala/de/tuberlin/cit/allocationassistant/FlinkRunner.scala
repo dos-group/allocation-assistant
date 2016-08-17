@@ -8,8 +8,8 @@ class FlinkRunner(options: Options, freamon: Freamon) extends CommandRunner(opti
     options.conf.getString("allocation-assistant.flink") +
       s" run -m yarn-cluster" +
       s" -yn $scaleOut" +
-      s" -ytm ${options.args.memory()}" +
-      s" ${options.jarWithArgs}"
+      s" -ytm ${options.args.memory()} " +
+      options.args.jarWithArgs().mkString(" ")
   }
 
   override def getAppId(line: String): Option[String] = {

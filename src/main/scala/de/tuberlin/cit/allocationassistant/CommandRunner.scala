@@ -63,7 +63,7 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
       if (canStart && isStartLine(line)) {
         startTime = System.currentTimeMillis()
         freamon.freamonMaster ! ApplicationStart(
-          appId, startTime, options.jarWithArgs, options.args.slots(), options.args.memory())
+          appId, startTime, options.jarSignature, options.args.slots(), options.args.memory())
 
         println("Job started as " + appId)
 

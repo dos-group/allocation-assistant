@@ -35,7 +35,7 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
   val maxContainers = opt[Int](short = 'N', default = Option(Int.MaxValue),
     descr = "Maximum number of containers to assign")
 
-  val rawJarWithArgs = trailArg[List[String]](required = true, name = "xy.jar [arg1 arg2 ...]",
+  val jarWithArgs = trailArg[List[String]](required = true, name = "xy.jar [arg1 arg2 ...]",
     descr = "Jar to run and its arguments")
 
   verify()
@@ -43,8 +43,6 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
 
 class Options(rawArgs: Array[String]) {
   val args = new Args(rawArgs)
-
-  val jarWithArgs = args.rawJarWithArgs().mkString(" ")
 
   println(s"Loading configuration at ${args.config()}")
   // configuration from the file passed as argument, with defaults from application.conf
@@ -59,6 +57,8 @@ class Options(rawArgs: Array[String]) {
 
   val cmdLogPath = conf.getString("allocation-assistant.flink-logs")
   val hadoopConfDir: String = System.getenv("HADOOP_PREFIX") + "/etc/hadoop/"
+
+  val jarSignature = args.jarWithArgs().mkString(" ")
 
   /** Applies each of the limits {min,max}Containers (if given in args) to a scale-out
     *

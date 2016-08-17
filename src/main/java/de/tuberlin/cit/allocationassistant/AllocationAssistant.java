@@ -10,11 +10,11 @@ public class AllocationAssistant {
 		Options options = new Options(args);
 		Freamon freamon = new Freamon(options.akka());
 
-		PreviousRuns previousRuns = freamon.getPreviousRuns(options.jarWithArgs());
+		PreviousRuns previousRuns = freamon.getPreviousRuns(options.jarSignature());
 		Integer[] scaleOuts = previousRuns.scaleOuts();
 		Double[] runtimes = previousRuns.runtimes();
 
-		System.out.println("found " + scaleOuts.length + " runs with signature " + options.jarWithArgs());
+		System.out.println("found " + scaleOuts.length + " runs with signature " + options.jarSignature());
 
 		int scaleOut;
 		if (scaleOuts.length < 2) {
@@ -28,7 +28,7 @@ public class AllocationAssistant {
 		scaleOut = options.applyScaleOutLimits(scaleOut);
 		System.out.println("Using scaleOut of " + scaleOut);
 
-		new FlinkRunner(options, freamon).runFlink(scaleOut);
+		new FlinkRunner(options, freamon).run(scaleOut);
 
 		// terminate the application, or else akka will keep it alive
 		System.exit(0);
