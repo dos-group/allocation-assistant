@@ -8,6 +8,18 @@ public class AllocationAssistant {
 		Options options = new Options(args);
 		Freamon freamon = new Freamon(options.akka());
 
+		String engine = options.args().engine().apply();
+		CommandRunner runner;
+		if ("flink".equals(engine)) {
+			runner = new FlinkRunner(options, freamon);
+		} else if ("spark".equals(engine)) {
+			runner = new SparkRunner(options, freamon);
+		} else {
+			System.err.println("Unknown engine " + engine + ", use \"flink\" or \"spark\"");
+			System.exit(1);
+			return;
+		}
+
 		PreviousRuns previousRuns = freamon.getPreviousRuns(options.jarSignature());
 		PredictorInput runs = new DatasetSizeFilter(options.datasetSize()).filterPreviousRuns(previousRuns);
 		int numPrevRuns = runs.scaleOuts.size();
@@ -30,7 +42,7 @@ public class AllocationAssistant {
 		scaleOut = options.applyScaleOutLimits(scaleOut);
 		System.out.println("Using scale-out of " + scaleOut);
 
-		new FlinkRunner(options, freamon).run(scaleOut);
+		runner.run(scaleOut);
 
 		// terminate the application, or else akka will keep it alive
 		System.exit(0);
