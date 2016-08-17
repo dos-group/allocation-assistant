@@ -1,6 +1,8 @@
 package de.tuberlin.cit.allocationassistant
 
 import java.io.File
+import java.nio.file.{Files, Paths}
+import java.security.MessageDigest
 
 import com.typesafe.config.ConfigFactory
 import org.rogach.scallop.ScallopConf
@@ -58,7 +60,13 @@ class Options(rawArgs: Array[String]) {
   val cmdLogPath = conf.getString("allocation-assistant.flink-logs")
   val hadoopConfDir: String = System.getenv("HADOOP_PREFIX") + "/etc/hadoop/"
 
-  val jarSignature = args.jarWithArgs().mkString(" ")
+  // hash of first jar file in trailing args
+  val jarSignature = {
+    val jarPath = args.jarWithArgs().find(_.endsWith(".jar")).head
+    val jarBytes = Files.readAllBytes(Paths.get(jarPath))
+    val hashBytes = MessageDigest.getInstance("MD5").digest(jarBytes)
+    hashBytes.map("%02x".format(_)).mkString
+  }
 
   /** Applies each of the limits {min,max}Containers (if given in args) to a scale-out
     *
