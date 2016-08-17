@@ -57,7 +57,6 @@ class Options(rawArgs: Array[String]) {
       + "\nakka.remote.netty.tcp.port=" + conf.getInt("allocation-assistant.actors.port")
   ).withFallback(conf)
 
-  val flink = conf.getString("allocation-assistant.flink")
   val cmdLogPath = conf.getString("allocation-assistant.flink-logs")
   val hadoopConfDir: String = System.getenv("HADOOP_PREFIX") + "/etc/hadoop/"
 
