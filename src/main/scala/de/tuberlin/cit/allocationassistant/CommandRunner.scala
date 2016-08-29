@@ -3,7 +3,7 @@ package de.tuberlin.cit.allocationassistant
 import java.io.File
 import java.time.Instant
 
-import de.tuberlin.cit.freamon.api.{ApplicationStart, ApplicationStop}
+import de.tuberlin.cit.freamon.api.{ApplicationMetadata, ApplicationStart, ApplicationStop}
 
 import scala.sys.process._
 
@@ -45,6 +45,16 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
     result
   }
 
+  def sendMetadata(appId: String): Unit = {
+    freamon.freamonMaster ! ApplicationMetadata(appId,
+      framework=framework,
+      signature=options.jarSignature,
+      datasetSize=options.datasetSize,
+      coresPerContainer=options.args.slots(),
+      memoryPerContainer=options.args.memory()
+    )
+  }
+
   class FlinkLogger(file: File) extends FileProcessLogger(file) {
     var appId = "no appId"
     var startTime = 0L
@@ -62,8 +72,7 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
 
       if (canStart && isStartLine(line)) {
         startTime = System.currentTimeMillis()
-        freamon.freamonMaster ! ApplicationStart(
-          appId, startTime, options.jarSignature, options.args.slots(), options.args.memory())
+        freamon.freamonMaster ! ApplicationStart(appId, startTime)
 
         println("Job started as " + appId)
 
