@@ -30,10 +30,24 @@
     </properties>
 
     <dependencies>
+
         <dependency>
             <groupId>de.tuberlin.cit</groupId>
             <artifactId>freamon-api</artifactId>
             <version>1.1-SNAPSHOT</version>
+        </dependency>
+
+        <!-- for dataset size via FileStatus -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>2.7.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>2.7.1</version>
         </dependency>
 
         <dependency>
@@ -47,6 +61,7 @@
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-compiler</artifactId>
@@ -58,6 +73,7 @@
             <artifactId>akka-actor_2.11</artifactId>
             <version>${akka.version}</version>
         </dependency>
+
         <dependency>
             <groupId>com.typesafe.akka</groupId>
             <artifactId>akka-remote_2.11</artifactId>
@@ -69,12 +85,12 @@
             <artifactId>scallop_2.11</artifactId>
             <version>1.0.2</version>
         </dependency>
+
         <dependency>
             <groupId>com.googlecode.matrix-toolkits-java</groupId>
             <artifactId>mtj</artifactId>
             <version>1.0.2</version>
         </dependency>
-
 
         <dependency>
             <groupId>junit</groupId>
@@ -82,6 +98,7 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
 
     <build>

@@ -5,6 +5,8 @@ import java.nio.file.{Files, Paths}
 import java.security.MessageDigest
 
 import com.typesafe.config.ConfigFactory
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.rogach.scallop.ScallopConf
 import org.rogach.scallop.exceptions.ScallopException
 
@@ -66,6 +68,17 @@ class Options(rawArgs: Array[String]) {
     val jarBytes = Files.readAllBytes(Paths.get(jarPath))
     val hashBytes = MessageDigest.getInstance("MD5").digest(jarBytes)
     hashBytes.map("%02x".format(_)).mkString
+  }
+
+  /** size of the dataset (first `hdfs://` URI arg) in bytes */
+  val datasetSize: Double = {
+    val datasetPath = args.jarWithArgs().find(_.startsWith("hdfs://")).head
+    val conf = new Configuration()
+    conf.addResource(new Path(hadoopConfDir, "core-site.xml"))
+    conf.addResource(new Path(hadoopConfDir, "hdfs-site.xml"))
+    val fs = FileSystem.get(conf)
+    val fileStatus = fs.getFileStatus(new Path(datasetPath))
+    fileStatus.getLen.asInstanceOf[Double]
   }
 
   /** Applies each of the limits {min,max}Containers (if given in args) to a scale-out
