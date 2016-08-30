@@ -11,19 +11,19 @@ public class AllocationAssistant {
 		Freamon freamon = new Freamon(options.akka());
 
 		PreviousRuns previousRuns = freamon.getPreviousRuns(options.jarSignature());
-		Integer[] scaleOuts = previousRuns.scaleOuts();
-		Double[] runtimes = previousRuns.runtimes();
+		ScaleOutPredictor.PredictorInput predictorInput = new DatasetSizeFilter(options.datasetSize()).filterPreviousRuns(previousRuns);
+		int numPrevRuns = previousRuns.scaleOuts().length;
 
-		System.out.println("found " + scaleOuts.length + " runs with signature " + options.jarSignature());
+		System.out.println("found " + numPrevRuns + " runs with signature " + options.jarSignature());
 
 		int scaleOut;
-		if (scaleOuts.length < 2) {
+		if (numPrevRuns < 2) {
 			// throws if this arg was not supplied
 			scaleOut = ((Integer) options.args().initialContainers().apply());
 		} else {
 			// build and use model to find scale-out (user target if available and between min-max resource constraints)
 			ScaleOutPredictor predictor = new ScaleOutPredictor();
-			scaleOut = predictor.computeScaleOut(scaleOuts, runtimes, (Double) options.args().maxRuntime().apply());
+			scaleOut = predictor.computeScaleOut(predictorInput, (Double) options.args().maxRuntime().apply());
 		}
 		scaleOut = options.applyScaleOutLimits(scaleOut);
 		System.out.println("Using scaleOut of " + scaleOut);
