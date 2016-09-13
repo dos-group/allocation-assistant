@@ -9,11 +9,11 @@ public class DatasetSizeFilter {
         this.datasetSize = datasetSize;
     }
 
-    public ScaleOutPredictor.PredictorInput filterPreviousRuns(PreviousRuns previousRuns) {
+    public PredictorInput filterPreviousRuns(PreviousRuns previousRuns) {
         double minSize = datasetSize * 0.9;
         double maxSize = datasetSize * 1.1;
 
-        ScaleOutPredictor.PredictorInput predictorInput = new ScaleOutPredictor.PredictorInput();
+        PredictorInput predictorInput = new PredictorInput();
 
         Integer[] scaleOuts = previousRuns.scaleOuts();
         Double[] runtimes = previousRuns.runtimes();

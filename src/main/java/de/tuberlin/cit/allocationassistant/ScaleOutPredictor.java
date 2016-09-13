@@ -5,9 +5,6 @@ import de.tuberlin.cit.allocationassistant.regression.SimpleLinearRegressionMode
 import no.uib.cipr.matrix.DenseMatrix;
 import no.uib.cipr.matrix.DenseVector;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 public class ScaleOutPredictor {
     private SimpleLinearRegression regression;
 
@@ -48,26 +45,4 @@ public class ScaleOutPredictor {
         return (int) Math.ceil(b / (maxRuntime - a));
     }
 
-    public int computeScaleOut(PredictorInput runs, Double maxRuntime) {
-        int[] scaleOutsUnboxed = new int[runs.scaleOuts.size()];
-        int i = 0;
-        for (Integer scaleOut: runs.scaleOuts) {
-            scaleOutsUnboxed[i] = scaleOut;
-            ++i;
-        }
-
-        double[] runtimesUnboxed = new double[runs.runtimes.size()];
-        i = 0;
-        for (Double runtime : runs.runtimes) {
-            runtimesUnboxed[i] = runtime;
-            ++i;
-        }
-
-        return computeScaleOut(scaleOutsUnboxed, runtimesUnboxed, maxRuntime);
-    }
-
-    public static class PredictorInput {
-        public Collection<Integer> scaleOuts = new ArrayList<>();
-        public Collection<Double> runtimes = new ArrayList<>();
-    }
 }
