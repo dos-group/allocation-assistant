@@ -16,7 +16,10 @@ public class AllocationAssistant {
 
 		int scaleOut;
 		if (numPrevRuns < 2) {
-			// throws if this arg was not supplied
+			if (options.args().initialContainers().isEmpty()) {
+				System.err.println("Not enough (" + numPrevRuns + ") previous runs available, please specify the initial number of containers (-i)");
+				System.exit(1);
+			}
 			scaleOut = (Integer) options.args().initialContainers().apply();
 		} else {
 			// build and use model to find scale-out (user target if available and between min-max resource constraints)
