@@ -28,19 +28,21 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
     val cmd = buildCmd(scaleOut)
     println(s"Executing command $cmd")
 
-    val logPath = options.cmdLogPath + File.separator + Instant.now()
+    val logPath = options.cmdLogPath + File.separator + Instant.now() + ".log"
     println(s"Saving command output to $logPath")
 
     new File(options.cmdLogPath).mkdirs()
-    val fileOutput = new FlinkLogger(new File(logPath))
+    val commandWrapper = new CommandWrapper(new File(logPath))
     val envHadoop = "HADOOP_CONF_DIR" -> options.hadoopConfDir
 
-    val result = Process(cmd, Option.empty, envHadoop) ! fileOutput
+    val result = Process(cmd, Option.empty, envHadoop) ! commandWrapper
 
-    if (fileOutput.canFinish) {
+    if (commandWrapper.canFinish) {
       println("Job did not finish, stopping Freamon manually")
-      freamon.freamonMaster ! ApplicationStop(fileOutput.appId, System.currentTimeMillis())
+      freamon.freamonMaster ! ApplicationStop(commandWrapper.appId, System.currentTimeMillis())
     }
+
+    commandWrapper.close()
 
     result
   }
@@ -55,7 +57,7 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
     )
   }
 
-  class FlinkLogger(file: File) extends FileProcessLogger(file) {
+  class CommandWrapper(file: File) extends FileProcessLogger(file) {
     var appId = "no appId"
     var startTime = 0L
 
@@ -64,6 +66,17 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
     var canFinish = false
 
     override def out(line: => String) {
+      handleLine(line)
+      super[FileProcessLogger].out(line)
+    }
+
+    override def err(lineFn: => String) {
+      val line = lineFn + ""
+      handleLine(line)
+      super[FileProcessLogger].err(line)
+    }
+
+    def handleLine(line: String): Unit = {
       getAppId(line).map { id =>
         appId = id
         println("Submitted application " + appId) // both informative and for Yarn-Workload-Runner
@@ -88,8 +101,6 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
 
         canFinish = false
       }
-
-      super[FileProcessLogger].out(line)
     }
   }
 
