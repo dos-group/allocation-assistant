@@ -76,6 +76,7 @@ class Options(rawArgs: Array[String]) {
     val conf = new Configuration()
     conf.addResource(new Path(hadoopConfDir, "core-site.xml"))
     conf.addResource(new Path(hadoopConfDir, "hdfs-site.xml"))
+    conf.setIfUnset("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem")
     val fs = FileSystem.get(conf)
     val fileStatus = fs.getFileStatus(new Path(datasetPath))
     fileStatus.getLen.asInstanceOf[Double]
