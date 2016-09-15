@@ -24,7 +24,8 @@ public class AllocationAssistant {
 		PredictorInput runs = new DatasetSizeFilter(options.datasetSize()).filterPreviousRuns(previousRuns);
 		int numPrevRuns = runs.scaleOuts.size();
 
-		System.out.println("found " + numPrevRuns + " runs with signature " + options.jarSignature());
+        System.out.printf("found %d runs with signature %s and dataset size within 10%% of %s%n",
+                numPrevRuns, options.jarSignature(), options.datasetSize());
 
 		int scaleOut;
 		if (numPrevRuns < 2) {
