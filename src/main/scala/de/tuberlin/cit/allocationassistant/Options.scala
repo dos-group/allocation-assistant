@@ -30,7 +30,7 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
   val maxRuntime = opt[Double](required = true, short = 'r',
     descr = "Maximum runtime in seconds")
 
-  val memory = opt[Int](required = true,
+  val memory = opt[Int](
     descr = "Memory per container, in MB")
   val slots = opt[Int](required = true,
     descr = "Number of slots per TaskManager")

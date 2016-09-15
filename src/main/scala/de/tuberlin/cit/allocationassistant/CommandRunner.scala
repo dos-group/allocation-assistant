@@ -53,7 +53,7 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
       signature=options.jarSignature,
       datasetSize=options.datasetSize,
       coresPerContainer=options.args.slots(),
-      memoryPerContainer=options.args.memory()
+      memoryPerContainer=options.args.memory.orElse(Option(0))()
     )
   }
 

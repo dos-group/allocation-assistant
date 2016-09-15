@@ -4,12 +4,12 @@ class SparkRunner(options: Options, freamon: Freamon) extends CommandRunner(opti
   override val framework: Symbol = 'Spark
 
   override def buildCmd(scaleOut: Int): String = {
-    // TODO set #slots from args
-    options.conf.getString("allocation-assistant.spark") +
-      s" --master yarn --deploy-mode cluster" +
-      s" --num-executors $scaleOut" +
-      s" --executor-memory ${options.args.memory()} " +
-      s"${options.args.jarWithArgs().mkString(" ")}"
+    var s = options.conf.getString("allocation-assistant.spark") +
+      s" --master yarn --deploy-mode cluster --num-executors $scaleOut "
+    if (options.args.memory.isDefined) {
+      s += s"--executor-memory ${options.args.memory()} "
+    }
+    s + options.args.jarWithArgs().mkString(" ")
   }
 
   override def getAppId(line: String): Option[String] = {

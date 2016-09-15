@@ -4,12 +4,12 @@ class FlinkRunner(options: Options, freamon: Freamon) extends CommandRunner(opti
   override val framework: Symbol = 'Flink
 
   override def buildCmd(scaleOut: Int): String = {
-    // TODO set #slots from args
-    options.conf.getString("allocation-assistant.flink") +
-      s" run -m yarn-cluster" +
-      s" -yn $scaleOut" +
-      s" -ytm ${options.args.memory()} " +
-      options.args.jarWithArgs().mkString(" ")
+    var s = options.conf.getString("allocation-assistant.flink") +
+      s" run -m yarn-cluster -yn $scaleOut "
+    if (options.args.memory.isDefined) {
+      s += s"-ytm ${options.args.memory()} "
+    }
+    s + options.args.jarWithArgs().mkString(" ")
   }
 
   override def getAppId(line: String): Option[String] = {
