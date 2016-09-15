@@ -66,6 +66,7 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
     var canFinish = false
 
     var unflushedLines = 0
+    var lastFlushTime = System.currentTimeMillis()
 
     override def out(line: => String) {
       handleLine(line)
@@ -106,7 +107,9 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
       }
 
       unflushedLines += 1
-      if (unflushedLines > 10) {
+      val unflushedTime = System.currentTimeMillis() - lastFlushTime
+      if (unflushedLines > 10 || unflushedTime > 1) {
+        lastFlushTime = System.currentTimeMillis()
         unflushedLines = 0
         flush()
       }
