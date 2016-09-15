@@ -65,6 +65,8 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
     var canStart = true
     var canFinish = false
 
+    var unflushedLines = 0
+
     override def out(line: => String) {
       handleLine(line)
       super[FileProcessLogger].out(line)
@@ -101,6 +103,12 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
         println(s"Job finished, took $duration seconds")
 
         canFinish = false
+      }
+
+      unflushedLines += 1
+      if (unflushedLines > 10) {
+        unflushedLines = 0
+        flush()
       }
     }
   }
