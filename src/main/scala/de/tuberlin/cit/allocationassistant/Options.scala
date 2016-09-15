@@ -81,8 +81,12 @@ class Options(rawArgs: Array[String]) {
     conf.addResource(new Path(hadoopConfDir, "hdfs-site.xml"))
     conf.setIfUnset("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem")
     val fs = FileSystem.get(conf)
-    val fileStatus = fs.getFileStatus(new Path(datasetPath))
-    fileStatus.getLen.asInstanceOf[Double]
+    val filesIter = fs.listFiles(new Path(datasetPath), true)
+    var sizeSum: Double = 0
+    while (filesIter.hasNext) {
+      sizeSum += filesIter.next.getLen
+    }
+    sizeSum
   }.getOrElse(0)
 
   /** Applies each of the limits {min,max}Containers (if given in args) to a scale-out
