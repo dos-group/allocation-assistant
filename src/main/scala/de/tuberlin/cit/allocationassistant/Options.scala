@@ -92,8 +92,8 @@ class Options(rawArgs: Array[String]) {
     */
   def applyScaleOutLimits(scaleOut: Int): Int = {
     var limitedScaleOut = scaleOut
-    limitedScaleOut = Math.max(scaleOut, args.minContainers.orElse(Option(scaleOut))())
-    limitedScaleOut = Math.min(scaleOut, args.maxContainers.orElse(Option(scaleOut))())
+    limitedScaleOut = Math.max(scaleOut, args.minContainers.orElse(Option(limitedScaleOut))())
+    limitedScaleOut = Math.min(limitedScaleOut, args.maxContainers.orElse(Option(limitedScaleOut))())
     limitedScaleOut
   }
 
