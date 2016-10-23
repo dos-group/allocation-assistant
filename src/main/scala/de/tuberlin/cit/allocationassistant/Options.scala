@@ -10,6 +10,8 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.rogach.scallop.ScallopConf
 import org.rogach.scallop.exceptions.ScallopException
 
+import scala.util.Try
+
 class Args(a: Seq[String]) extends ScallopConf(a) {
   override def onError(e: Throwable): Unit = e match {
     case ScallopException(message) =>
@@ -75,7 +77,8 @@ class Options(rawArgs: Array[String]) {
 
   /** size of the dataset (first `hdfs://` URI arg) in bytes */
   val datasetSize: Double =
-  args.jarWithArgs().find(_.startsWith("hdfs://")).map { datasetPath =>
+  Try {
+    val datasetPath = args.jarWithArgs().find(_.startsWith("hdfs://")).get
     val conf = new Configuration()
     conf.addResource(new Path(hadoopConfDir, "core-site.xml"))
     conf.addResource(new Path(hadoopConfDir, "hdfs-site.xml"))
