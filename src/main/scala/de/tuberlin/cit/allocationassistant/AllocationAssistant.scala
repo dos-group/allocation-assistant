@@ -32,9 +32,9 @@ object AllocationAssistant {
         System.exit(1)
     }
 
-    val (scaleOuts, runtimes) = filterPreviousRuns(freamon.getPreviousRuns(options.jarSignature), options.datasetSize)
+    val (scaleOuts, runtimes) = filterPreviousRuns(freamon.getPreviousRuns(options.jarSignature), options.inputSize)
     val numPrevRuns = scaleOuts.length
-    println(s"Found $numPrevRuns runs with signature ${options.jarSignature} and dataset size within 10% of ${options.datasetSize}")
+    println(s"Found $numPrevRuns runs with signature ${options.jarSignature} and dataset size within 10% of ${options.inputSize}")
 
     var scaleOut = options.args.fallbackContainers()
     if (numPrevRuns > 2) {

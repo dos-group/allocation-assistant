@@ -76,19 +76,22 @@ class Options(rawArgs: Array[String]) {
     hashBytes.map("%02x".format(_)).mkString
   }
 
-  /** size of the dataset (first `hdfs://` URI arg) in bytes */
-  val datasetSize: Double =
+  /** size of the input dataset (all `hdfs://` URI args but the last) in bytes */
+  val inputSize: Double =
   Try {
-    val datasetPath = args.jarWithArgs().find(_.startsWith("hdfs://")).get
+    val datasetPaths = args.jarWithArgs().filter(_.startsWith("hdfs://"))
+    datasetPaths.takeRight(1) // all except last
     val conf = new Configuration()
     conf.addResource(new Path(hadoopConfDir, "core-site.xml"))
     conf.addResource(new Path(hadoopConfDir, "hdfs-site.xml"))
     conf.setIfUnset("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem")
     val fs = FileSystem.get(conf)
-    val filesIter = fs.listFiles(new Path(datasetPath), true)
     var sizeSum: Double = 0
-    while (filesIter.hasNext) {
-      sizeSum += filesIter.next.getLen
+    for (inputPath <- datasetPaths) {
+      val filesIter = fs.listFiles(new Path(inputPath), true)
+      while (filesIter.hasNext) {
+        sizeSum += filesIter.next.getLen
+      }
     }
     sizeSum
   }.getOrElse(0)
