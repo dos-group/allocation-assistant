@@ -1,6 +1,8 @@
 package de.tuberlin.cit.allocationassistant;
 
+import de.tuberlin.cit.allocationassistant.prediction.ScaleOutPredictor;
 import de.tuberlin.cit.freamon.api.PreviousRuns;
+import scala.Tuple2;
 
 public class AllocationAssistant {
 
@@ -37,8 +39,13 @@ public class AllocationAssistant {
 		} else {
 			// build and use model to find scale-out (user target if available and between min-max resource constraints)
 			Double maxRuntime = (Double) options.args().maxRuntime().apply();
+			Tuple2<Object, Object> scaleOutConstraint = new Tuple2<>(1,100); // TODO
 			ScaleOutPredictor predictor = new ScaleOutPredictor();
-			scaleOut = predictor.computeScaleOut(runs.unboxScaleOuts(), runs.unboxRuntimes(), maxRuntime);
+			scaleOut = (int) predictor.computeScaleOut(
+					runs.unboxScaleOuts(),
+					runs.unboxRuntimes(),
+					scaleOutConstraint,
+					maxRuntime)._1;
 		}
 		scaleOut = options.applyScaleOutLimits(scaleOut);
 		System.out.println("Using scale-out of " + scaleOut);
