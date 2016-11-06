@@ -14,7 +14,7 @@ import breeze.linalg.{DenseVector, convert}
 class ScaleOutPredictor {
 
   def computeScaleOut(scaleOuts: Array[Int], runtimes: Array[Double],
-                      scaleOutConstraint: (Int, Int), runtime: Double): (Int, Double) = {
+                      scaleOutConstraint: (Int, Int), runtime: Double): Option[(Int, Double)] = {
 
     val x = convert(new DenseVector(scaleOuts), Double)
     val y = new DenseVector(runtimes)
@@ -44,11 +44,16 @@ class ScaleOutPredictor {
     val targetMask = yPredict :< runtime
     val xTarget = xPredict(targetMask)
     val yTarget = yPredict(targetMask)
-    // select smallest scaleout satisfying the runtime constraint (greedy)
+
+    // select smallest scaleout satisfying the runtime constraint (greedy), if possible
+    if (xTarget.length == 0) {
+      return None
+    }
+
     val predictedScaleOut = xTarget(0)
     val predictedRuntime = yTarget(0)
 
-    (predictedScaleOut, predictedRuntime)
+    Some((predictedScaleOut, predictedRuntime))
   }
 
 }

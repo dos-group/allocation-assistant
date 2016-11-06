@@ -1,10 +1,14 @@
 package de.tuberlin.cit.allocationassistant.prediction
 
+import java.io.{File, FilenameFilter}
+
 import breeze.linalg.{*, DenseVector, argmin, linspace, sum}
 import breeze.numerics.abs
 
+import scala.io.{BufferedSource, Source}
+
 class Bell extends UnivariatePredictor {
-  var bestModel: UnivariatePredictor = null
+  var bestModel: UnivariatePredictor = _
 
   override def fit(x: DenseVector[Double], y: DenseVector[Double]): UnivariatePredictor = {
     if (x.length != y.length) {
