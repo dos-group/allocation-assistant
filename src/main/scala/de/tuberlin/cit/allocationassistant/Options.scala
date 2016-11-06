@@ -37,11 +37,12 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
   val slots = opt[Int](required = true,
     descr = "Number of slots per TaskManager")
 
-  val initialContainers = opt[Int](
-    descr = "If no previous runs are available, this many containers are assigned")
+  val fallbackContainers = opt[Int](required = true, short = 'i',
+    descr = "Amount of containers to assign, if no previous runs are available or " +
+      "if the runtime constraint cannot be fulfilled")
   val minContainers = opt[Int](short = 'n', default = Option(1),
     descr = "Minimum number of containers to assign")
-  val maxContainers = opt[Int](short = 'N', default = Option(Int.MaxValue),
+  val maxContainers = opt[Int](required = true, short = 'N',
     descr = "Maximum number of containers to assign")
 
   val jarWithArgs = trailArg[List[String]](required = true, name = "xy.jar [arg1 arg2 ...]",

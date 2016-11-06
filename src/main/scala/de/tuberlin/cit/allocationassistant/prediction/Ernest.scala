@@ -5,7 +5,7 @@ import breeze.numerics.log
 import breeze.optimize.linear.NNLS
 
 class Ernest extends UnivariatePredictor {
-  var coefficients: DenseVector[Double] = null
+  var coefficients: DenseVector[Double] = _
 
   override def fit(x: DenseVector[Double], y: DenseVector[Double]): UnivariatePredictor = {
     if (x.length != y.length) {

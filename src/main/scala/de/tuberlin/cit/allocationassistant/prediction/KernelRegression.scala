@@ -6,8 +6,8 @@ import breeze.numerics._
 class KernelRegression(degree: Int = 1, bandwidth: Double = 1, tolerance: Double = scala.Double.MinPositiveValue)
   extends UnivariatePredictor {
 
-  var x: DenseVector[Double] = null
-  var y: DenseVector[Double] = null
+  var x: DenseVector[Double] = _
+  var y: DenseVector[Double] = _
 
   override def fit(x: DenseVector[Double], y: DenseVector[Double]): UnivariatePredictor = {
     if (x.length != y.length) {
