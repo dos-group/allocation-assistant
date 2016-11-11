@@ -1,12 +1,11 @@
 # allocation-assistant
-resource allocation for recurring parallel dataflow jobs
+resource allocation assistance for recurring parallel dataflow jobs
 
 ## Compiling
-install the `dev` branch of Freamon:
+install Freamon (https://github.com/citlab/freamon):
 
 	git clone <freamon url>
 	cd freamon
-	git checkout dev
 	mvn install
 
 compile allocation-assistant:
@@ -17,6 +16,6 @@ compile allocation-assistant:
 ## Running
 1. setup+start freamon (see freamon readme)
 1. create your own config based on `doc/cluster.conf`
-1. `./allocation-assistent --help`
-1. find out the right args for your use case
 1. `./allocation-assistent <your args>`
+
+To see available arguments run `./allocation-assistent --help`
