@@ -51,9 +51,9 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
     freamon.freamonMaster ! ApplicationMetadata(appId,
       framework=framework,
       signature=options.jarSignature,
-      datasetSize=options.datasetSize,
-      coresPerContainer=options.args.slots(),
-      memoryPerContainer=options.args.memory.orElse(Option(0))()
+      inputSize=options.datasetSize,
+      coresPerWorker=options.args.slots(),
+      memoryPerWorker=options.args.memory.orElse(Option(0))()
     )
   }
 
