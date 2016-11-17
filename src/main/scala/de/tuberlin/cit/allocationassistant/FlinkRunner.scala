@@ -9,6 +9,9 @@ class FlinkRunner(options: Options, freamon: Freamon) extends CommandRunner(opti
     if (options.args.memory.isDefined) {
       s += s"-ytm ${options.args.memory()} "
     }
+    if (options.args.slots.isDefined) {
+      s += s"-ys ${options.args.slots()} "
+    }
     s + options.args.jarWithArgs().mkString(" ")
   }
 

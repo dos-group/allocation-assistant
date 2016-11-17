@@ -34,7 +34,7 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
 
   val memory = opt[Int](
     descr = "Memory per container, in MB")
-  val slots = opt[Int](required = true,
+  val slots = opt[Int](
     descr = "Number of slots per TaskManager")
 
   val fallbackContainers = opt[Int](required = true, short = 'i',
