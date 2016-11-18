@@ -9,6 +9,9 @@ class SparkRunner(options: Options, freamon: Freamon) extends CommandRunner(opti
     if (options.args.memory.isDefined) {
       s += s"--executor-memory ${options.args.memory()} "
     }
+    if (options.args.slots.isDefined) {
+      s += s"--executor-cores ${options.args.slots()} "
+    }
     s + options.args.jarWithArgs().mkString(" ")
   }
 
