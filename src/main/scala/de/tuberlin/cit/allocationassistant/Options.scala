@@ -16,8 +16,10 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
   override def onError(e: Throwable): Unit = e match {
     case ScallopException(message) =>
       println(message)
-      println(s"Usage: allocation-assistant -c <config> -r <max runtime> -m <memory> -s <slots>" +
-        s" [more args ...] <Jar> [Jar args ...]\n")
+      println(s"Usage: allocation-assistant -c <config> -r <max runtime> -m <memory> -s <slots> " +
+        s"-i <fallback containers> -N <max containers> " +
+        s"[more args ...] <Jar> [Jar args ...]")
+      println()
       printHelp()
       System.exit(1)
     case other => super.onError(e)
@@ -95,17 +97,4 @@ class Options(rawArgs: Array[String]) {
     }
     sizeSum
   }.getOrElse(0)
-
-  /** Applies each of the limits {min,max}Containers (if given in args) to a scale-out
-    *
-    * @param scaleOut the scale-out to apply the limits to
-    * @return scale-out with all given limits applied
-    */
-  def applyScaleOutLimits(scaleOut: Int): Int = {
-    var limitedScaleOut = scaleOut
-    limitedScaleOut = Math.max(scaleOut, args.minContainers.orElse(Option(limitedScaleOut))())
-    limitedScaleOut = Math.min(limitedScaleOut, args.maxContainers.orElse(Option(limitedScaleOut))())
-    limitedScaleOut
-  }
-
 }
