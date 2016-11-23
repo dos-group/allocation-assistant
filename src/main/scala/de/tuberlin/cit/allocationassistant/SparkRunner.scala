@@ -7,7 +7,7 @@ class SparkRunner(options: Options, freamon: Freamon) extends CommandRunner(opti
     var s = options.conf.getString("allocation-assistant.spark") +
       s" --master yarn --deploy-mode cluster --num-executors $scaleOut "
     if (options.args.memory.isDefined) {
-      s += s"--executor-memory ${options.args.memory()} "
+      s += s"--executor-memory ${options.args.memory()}m "
     }
     if (options.args.slots.isDefined) {
       s += s"--executor-cores ${options.args.slots()} "
