@@ -16,12 +16,10 @@ class SparkRunner(options: Options, freamon: Freamon) extends CommandRunner(opti
   }
 
   override def getAppId(line: String): Option[String] = {
-    val submitMarker = "Submitting application "
-    val toMarker = " to ResourceManager"
+    val submitMarker = "Submitted application "
     if (line.contains(submitMarker)) {
       Some(line.substring(line.indexOf(submitMarker))
         .replace(submitMarker, "")
-        .replace(toMarker, "")
         .trim)
     }
     else None
