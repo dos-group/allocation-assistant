@@ -5,6 +5,49 @@ import de.tuberlin.cit.freamon.api.PreviousRuns
 
 object AllocationAssistant {
 
+  def computeScaleOut(scaleOuts: Array[Int], runtimes: Array[Double], constraint: (Int, Int), target: Double): Int = {
+
+
+    // argsort scale-outs
+    val idxs = scaleOuts.zipWithIndex.sortBy(_._1).map(_._2)
+
+    // sort scale-outs and runtimes array
+    val scaleOutsSorted = idxs.map(scaleOuts(_))
+    val runtimesSorted = idxs.map(runtimes(_))
+
+    val (minScaleOut, maxScaleOut) = constraint
+
+    // for less than 3 scale-outs use the following heuristic
+
+    if (scaleOutsSorted.length == 0) {
+      return maxScaleOut
+    }
+
+    if (scaleOutsSorted.length == 1) {
+      return (minScaleOut + scaleOutsSorted(0)) / 2
+    }
+
+    if (scaleOutsSorted.length == 2) {
+      if (runtimesSorted(0) < target) {
+        return (minScaleOut + scaleOutsSorted(0)) / 2
+      } else {
+        return (scaleOutsSorted(0) + scaleOutsSorted(1)) / 2
+      }
+    }
+
+    // if there are at least 3 scale-outs use our model
+    val predictor = new ScaleOutPredictor
+    val result = predictor.computeScaleOut(scaleOutsSorted, runtimesSorted, constraint, target)
+
+    if (result.isDefined) {
+      val (scaleOutPrediction, runtimePrediction) = result.get
+      return scaleOutPrediction
+    }
+
+    // if target cannot be fulfilled use the max amount of nodes
+    maxScaleOut
+  }
+
   def filterPreviousRuns(previousRuns: PreviousRuns, targetDatasetSize: Double): (Array[Int], Array[Double]) = {
 
     (previousRuns.scaleOuts zip previousRuns.runtimes zip previousRuns.datasetSizes)
@@ -36,18 +79,9 @@ object AllocationAssistant {
     val numPrevRuns = scaleOuts.length
     println(s"Found $numPrevRuns runs with signature ${options.jarSignature} and dataset size within 10% of ${options.inputSize}")
 
-    var scaleOut = options.args.fallbackContainers()
-    if (numPrevRuns > 2) {
-      val maxRuntime: Double = options.args.maxRuntime()
-      val scaleOutConstraint = (options.args.minContainers(), options.args.maxContainers())
-      val predictor = new ScaleOutPredictor
-      val result = predictor.computeScaleOut(scaleOuts, runtimes, scaleOutConstraint, maxRuntime)
-
-      if (result.isDefined) {
-        val (scaleOutPrediction, runtimePrediction) = result.get
-        scaleOut = scaleOutPrediction
-      }
-    }
+    val maxRuntime: Double = options.args.maxRuntime()
+    val scaleOutConstraint = (options.args.minContainers(), options.args.maxContainers())
+    var scaleOut = computeScaleOut(scaleOuts, runtimes, scaleOutConstraint, maxRuntime)
     println(s"Using scale-out of $scaleOut")
 
     runner.run(scaleOut)
