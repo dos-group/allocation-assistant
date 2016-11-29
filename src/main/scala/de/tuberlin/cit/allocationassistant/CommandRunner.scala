@@ -32,7 +32,7 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
     println(s"Saving command output to $logPath")
 
     new File(options.cmdLogPath).mkdirs()
-    val commandWrapper = new CommandWrapper(new File(logPath))
+    val commandWrapper = new CommandWrapper(new File(logPath), scaleOut)
     val envHadoop = "HADOOP_CONF_DIR" -> options.hadoopConfDir
 
     val result = Process(cmd, Option.empty, envHadoop) ! commandWrapper
@@ -47,17 +47,18 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
     result
   }
 
-  def sendMetadata(appId: String): Unit = {
+  def sendMetadata(appId: String, scaleOut: Int): Unit = {
     freamon.freamonMaster ! ApplicationMetadata(appId,
       framework=framework,
       signature=options.jarSignature,
       inputSize=options.inputSize,
+      numWorkers = scaleOut,
       coresPerWorker=options.args.slots(),
       memoryPerWorker=options.args.memory.orElse(Option(0))()
     )
   }
 
-  class CommandWrapper(file: File) extends FileProcessLogger(file) {
+  class CommandWrapper(file: File, scaleOut: Int) extends FileProcessLogger(file) {
     var appId = "no appId"
     var startTime = 0L
 
@@ -89,7 +90,7 @@ abstract class CommandRunner(options: Options, freamon: Freamon) {
       if (canStart && isStartLine(line)) {
         startTime = System.currentTimeMillis()
         freamon.freamonMaster ! ApplicationStart(appId, startTime)
-        sendMetadata(appId)
+        sendMetadata(appId, scaleOut)
 
         println("Job started as " + appId)
 

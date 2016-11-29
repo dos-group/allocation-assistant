@@ -81,7 +81,7 @@ object AllocationAssistant {
 
     val maxRuntime: Double = options.args.maxRuntime()
     val scaleOutConstraint = (options.args.minContainers(), options.args.maxContainers())
-    var scaleOut = computeScaleOut(scaleOuts, runtimes, scaleOutConstraint, maxRuntime)
+    val scaleOut = computeScaleOut(scaleOuts, runtimes, scaleOutConstraint, maxRuntime)
     println(s"Using scale-out of $scaleOut")
 
     runner.run(scaleOut)
