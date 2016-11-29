@@ -17,7 +17,7 @@ class Bell extends UnivariatePredictor {
 
     // create candidate models for interpolation
     val bandwidths = linspace(1, 100, 100).toArray
-    val models = bandwidths.map(bandwidth => new KernelRegression(bandwidth = bandwidth)) :+ new Ernest()
+    val models = bandwidths.map(bandwidth => new KernelRegression(bandwidth = bandwidth, tolerance = 1e-12)) :+ new Ernest()
 
     // compute the cv score using interpolation splits
     val scores = CrossValidation.crossValidationScore(models, new InterpolationSplits(x, y),
