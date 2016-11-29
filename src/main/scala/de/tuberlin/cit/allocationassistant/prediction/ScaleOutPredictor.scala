@@ -19,9 +19,6 @@ class ScaleOutPredictor {
     val x = convert(new DenseVector(scaleOuts), Double)
     val y = new DenseVector(runtimes)
 
-    // fit data using bell (for interpolation)
-    val bell: UnivariatePredictor = new Bell()
-    bell.fit(x, y)
     // and ernest (for extrapolation)
     val ernest: UnivariatePredictor = new Ernest()
     ernest.fit(x, y)
@@ -37,7 +34,17 @@ class ScaleOutPredictor {
 
     // predict with respective model
     val yPredict = DenseVector.zeros[Double](xPredict.length)
-    yPredict(interpolationMask) := bell.predict(convert(xPredictInterpolation, Double))
+
+    if (x.length <= 5) {
+      // if too few data use ernest model
+      yPredict(interpolationMask) := ernest.predict(convert(xPredictInterpolation, Double))
+    } else {
+      // fit data using bell (for interpolation)
+      val bell: UnivariatePredictor = new Bell()
+      bell.fit(x, y)
+      yPredict(interpolationMask) := bell.predict(convert(xPredictInterpolation, Double))
+    }
+
     yPredict(!interpolationMask) := ernest.predict(convert(xPredictExtrapolation, Double))
 
     // get the prediction over the constrained scaleout range
