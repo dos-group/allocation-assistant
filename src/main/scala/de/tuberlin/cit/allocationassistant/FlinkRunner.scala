@@ -6,6 +6,9 @@ class FlinkRunner(options: Options, freamon: Freamon) extends CommandRunner(opti
   override def buildCmd(scaleOut: Int): String = {
     var s = options.conf.getString("allocation-assistant.flink") +
       s" run -m yarn-cluster -yn $scaleOut "
+    if (options.args.masterMemory.isDefined) {
+      s += s"-yjm ${options.args.masterMemory()} "
+    }
     if (options.args.memory.isDefined) {
       s += s"-ytm ${options.args.memory()} "
     }

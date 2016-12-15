@@ -34,6 +34,8 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
 
   val memory = opt[Int](
     descr = "Memory per container, in MB")
+  val masterMemory = opt[Int](short = 'M',
+    descr = "Master memory, in MB (Flink JobManager or Spark driver)")
   val slots = opt[Int](
     descr = "Number of slots per TaskManager")
 
