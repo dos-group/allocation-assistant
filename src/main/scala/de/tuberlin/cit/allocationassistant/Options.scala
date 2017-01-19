@@ -84,14 +84,14 @@ class Options(rawArgs: Array[String]) {
   val inputSize: Double =
   Try {
     val datasetPaths = args.jarWithArgs().filter(_.startsWith("hdfs://"))
-    datasetPaths.takeRight(1) // all except last
+    val inputPaths = datasetPaths.dropRight(1) // all except last
     val conf = new Configuration()
     conf.addResource(new Path(hadoopConfDir, "core-site.xml"))
     conf.addResource(new Path(hadoopConfDir, "hdfs-site.xml"))
     conf.setIfUnset("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem")
     val fs = FileSystem.get(conf)
     var sizeSum: Double = 0
-    for (inputPath <- datasetPaths) {
+    for (inputPath <- inputPaths) {
       val filesIter = fs.listFiles(new Path(inputPath), true)
       while (filesIter.hasNext) {
         sizeSum += filesIter.next.getLen
