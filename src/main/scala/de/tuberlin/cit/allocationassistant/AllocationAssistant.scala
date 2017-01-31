@@ -84,6 +84,10 @@ object AllocationAssistant {
     val scaleOut = computeScaleOut(scaleOuts, runtimes, scaleOutConstraint, maxRuntime)
     println(s"Using scale-out of $scaleOut")
 
+    if (options.args.dryRun.isSupplied) {
+      System.exit(0)
+    }
+
     runner.run(scaleOut)
 
     // terminate the application, or else akka will keep it alive

@@ -49,6 +49,8 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
   val maxContainers = opt[Int](required = true, short = 'N',
     descr = "Maximum number of containers to assign")
 
+  val dryRun = opt[Boolean](argName = "dry", default = Option(false), noshort = true)
+
   val jarWithArgs = trailArg[List[String]](required = true, name = "xy.jar [arg1 arg2 ...]",
     descr = "Jar to run and its arguments")
 
