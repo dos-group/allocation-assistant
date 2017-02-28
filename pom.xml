@@ -27,6 +27,8 @@
         <akka.version>2.4.8</akka.version>
         <!-- Log4J -->
         <log4j.version>1.2.17</log4j.version>
+        <!-- Spark -->
+        <sparkcore.version>2.1.0</sparkcore.version>
     </properties>
 
     <dependencies>
@@ -48,6 +50,12 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdfs</artifactId>
             <version>2.7.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.tools.version}</artifactId>
+            <version>${sparkcore.version}</version>
         </dependency>
 
         <dependency>
