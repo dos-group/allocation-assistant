@@ -60,14 +60,10 @@ class Options(rawArgs: Array[String]) {
 
   println(s"Loading configuration at ${args.config()}")
   // configuration from the file passed as argument, with defaults from application.conf
-  val conf = ConfigFactory.parseFile(new File(args.config()))
-    .withFallback(ConfigFactory.load()).resolve()
+  val conf = ConfigHelper.loadFromFile(args.config())
 
   // configuration prepared for use with akka
-  val akka = ConfigFactory.parseString(
-    "akka.remote.netty.tcp.hostname=" + conf.getString("allocation-assistant.actors.hostname")
-      + "\nakka.remote.netty.tcp.port=" + conf.getInt("allocation-assistant.actors.port")
-  ).withFallback(conf)
+  val akka = ConfigHelper.prepareForAkka(conf)
 
   val cmdLogPath = conf.getString("allocation-assistant.flink-logs")
   val hadoopConfDir: String = System.getenv("HADOOP_PREFIX") + "/etc/hadoop/"
