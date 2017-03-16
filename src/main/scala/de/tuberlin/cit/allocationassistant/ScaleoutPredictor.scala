@@ -55,7 +55,7 @@ class ScaleoutPredictor(
     // check if the job will finish in time, rescale if it won't
     val runtimeLeft = jobStart + targetRuntime - System.currentTimeMillis()
     val totalDurationNeededForCurrentScaleout = nextStages
-      .map(predictStageDurationForScaleout(_, currentScaleout, stageRuntimes))
+      .map(stage => predictStageDurationForScaleout(currentScaleout, stageRuntimes(stage)))
       .sum
     if (totalDurationNeededForCurrentScaleout > runtimeLeft * 1.05) {
       // exceeding target runtime by over 5%, rescaling
@@ -63,7 +63,7 @@ class ScaleoutPredictor(
       val newScaleout = (minExecutors to maxExecutors)
         .find { scaleout =>
           val totalDurationNeeded = nextStages
-            .map(predictStageDurationForScaleout(_, scaleout, stageRuntimes))
+            .map(stage => predictStageDurationForScaleout(scaleout, stageRuntimes(stage)))
             .sum
           totalDurationNeeded < runtimeLeft * .90 // 10% slack
         }
@@ -87,7 +87,7 @@ class ScaleoutPredictor(
       }.map(_._2)
   }
 
-  def predictStageDurationForScaleout(stage: Int, scaleout: Int, stageRuntimes: Map[Int, Array[java.lang.Double]]): Int = {
+  def predictStageDurationForScaleout(scaleout: Int, stageRuntimes: Array[java.lang.Double]): Int = {
     // TODO queries the model in a different way than the allocation assistant
     ???
   }
