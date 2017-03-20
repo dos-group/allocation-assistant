@@ -7,6 +7,7 @@ import akka.util.Timeout
 import com.typesafe.config.Config
 import de.tuberlin.cit.freamon.api.{FindPreviousRunsOfStage, PreviousRuns, StageDuration}
 import org.apache.spark.SparkContext
+import org.apache.spark.scheduler.{SparkListener, SparkListenerApplicationStart, SparkListenerStageCompleted, SparkListenerStageSubmitted}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
