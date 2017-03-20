@@ -7,7 +7,6 @@ import akka.util.Timeout
 import com.typesafe.config.Config
 import de.tuberlin.cit.freamon.api.{FindPreviousRunsOfStage, PreviousRuns, StageDuration}
 import org.apache.spark.SparkContext
-import org.apache.spark.scheduler.{SparkListener, SparkListenerStageCompleted, SparkListenerStageSubmitted}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
@@ -23,10 +22,10 @@ class ScaleoutPredictor(
                        ) extends SparkListener {
 
 
-  private val minExecutors = clusterConfig.getInt("ScaleoutPredictor.cluster.minExecutors")
-  private val maxExecutors = clusterConfig.getInt("ScaleoutPredictor.cluster.maxExecutors")
+  private val minExecutors = clusterConfig.getInt("allocation-assistant.minExecutors")
+  private val maxExecutors = clusterConfig.getInt("allocation-assistant.maxExecutors")
 
-  private val freamon = new Freamon(clusterConfig.getConfig("ScaleoutPredictor.akka"))
+  private val freamon = new Freamon(clusterConfig)
 
   private var jobStart: Long = 0
   private var currentStageNr = 1
