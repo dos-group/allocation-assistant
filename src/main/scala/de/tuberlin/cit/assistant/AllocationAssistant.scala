@@ -1,7 +1,7 @@
-package de.tuberlin.cit.allocationassistant
+package de.tuberlin.cit.assistant
 
-import de.tuberlin.cit.allocationassistant.prediction.ScaleOutPredictor
 import de.tuberlin.cit.freamon.api.PreviousRuns
+import de.tuberlin.cit.prediction.ScaleOutPredictor
 
 object AllocationAssistant {
 

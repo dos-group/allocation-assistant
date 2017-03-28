@@ -3,10 +3,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.tuberlin.cit</groupId>
-    <artifactId>AllocationAssistant</artifactId>
+    <artifactId>allocation-assistant</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>AllocationAssistant</name>
+    <name>allocation-assistant</name>
 
     <packaging>jar</packaging>
 
@@ -21,14 +21,14 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <!-- Scala -->
-        <scala.version>2.11.7</scala.version>
         <scala.tools.version>2.11</scala.tools.version>
+        <scala.version>${scala.tools.version}.7</scala.version>
         <!-- Akka -->
         <akka.version>2.4.8</akka.version>
         <!-- Log4J -->
         <log4j.version>1.2.17</log4j.version>
         <!-- Spark -->
-        <sparkcore.version>2.1.0</sparkcore.version>
+        <spark.version>2.1.0</spark.version>
     </properties>
 
     <dependencies>
@@ -39,73 +39,88 @@
             <version>1.1-SNAPSHOT</version>
         </dependency>
 
-        <!-- for dataset size via FileStatus -->
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <version>2.7.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-hdfs</artifactId>
-            <version>2.7.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_${scala.tools.version}</artifactId>
-            <version>${sparkcore.version}</version>
-        </dependency>
-
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>${log4j.version}</version>
         </dependency>
 
+        <!-- Hadoop -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>2.7.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-hdfs</artifactId>
+            <version>2.7.1</version>
+        </dependency>
+
+        <!-- Scala -->
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-library</artifactId>
             <version>${scala.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.scala-lang</groupId>
             <artifactId>scala-compiler</artifactId>
             <version>${scala.version}</version>
         </dependency>
 
+        <!-- Spark -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_${scala.tools.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-mllib_${scala.tools.version}</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+        <!-- Akka -->
         <dependency>
             <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-actor_2.11</artifactId>
+            <artifactId>akka-actor_${scala.tools.version}</artifactId>
+            <version>${akka.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.akka</groupId>
+            <artifactId>akka-remote_${scala.tools.version}</artifactId>
             <version>${akka.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>com.typesafe.akka</groupId>
-            <artifactId>akka-remote_2.11</artifactId>
-            <version>${akka.version}</version>
-        </dependency>
-
+        <!-- Misc -->
         <dependency>
             <groupId>org.rogach</groupId>
-            <artifactId>scallop_2.11</artifactId>
-            <version>1.0.2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.googlecode.matrix-toolkits-java</groupId>
-            <artifactId>mtj</artifactId>
-            <version>1.0.2</version>
+            <artifactId>scallop_${scala.tools.version}</artifactId>
+            <version>2.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.scalanlp</groupId>
-            <artifactId>breeze_2.11</artifactId>
-            <version>0.12</version>
+            <artifactId>breeze_${scala.tools.version}</artifactId>
+            <version>0.13</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe</groupId>
+            <artifactId>config</artifactId>
+            <version>1.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scalikejdbc</groupId>
+            <artifactId>scalikejdbc_${scala.tools.version}</artifactId>
+            <version>2.5.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.194</version>
         </dependency>
 
-
+        <!-- Test -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -114,7 +129,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.11</artifactId>
+            <artifactId>scalatest_${scala.tools.version}</artifactId>
             <version>3.0.0</version>
             <scope>test</scope>
         </dependency>
@@ -227,7 +242,7 @@
                         </transformer>
                         <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                             <manifestEntries>
-                                <Main-Class>de.tuberlin.cit.allocationassistant.AllocationAssistant</Main-Class>
+                                <Main-Class>de.tuberlin.cit.assistant.AllocationAssistant</Main-Class>
                             </manifestEntries>
                         </transformer>
                     </transformers>
@@ -240,6 +255,15 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>4.1.2</version>
+                <configuration>
+                    <url>jdbc:h2:./target/bell</url>
+                    <user>sa</user>
+                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -1,4 +1,4 @@
-package de.tuberlin.cit.allocationassistant.prediction
+package de.tuberlin.cit.prediction
 
 import org.scalatest.FlatSpec
 
@@ -37,7 +37,7 @@ class ErnestSpec extends FlatSpec {
       ernest.fit(x, y)
       val yPredict = ernest.predict(x)
 
-      y zip yPredict forall { case (a, b) => abs(a - b) < 10e-10 }
+      y zip yPredict forall { case (a, b) => abs(a - b) < 10e-8 }
     }
 
     assert {
@@ -48,7 +48,7 @@ class ErnestSpec extends FlatSpec {
       ernest.fit(x, y)
       val yPredict = ernest.predict(x)
 
-      yPredict forall { abs(_) < 10e-10 }
+      yPredict forall { abs(_) < 10e-8 }
     }
 
   }

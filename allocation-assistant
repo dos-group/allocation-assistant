@@ -1,2 +1,2 @@
 #!/bin/bash
-java -jar "$(dirname $BASH_SOURCE)/target/AllocationAssistant-1.0-SNAPSHOT-allinone.jar" $@
+java -jar "$(dirname $BASH_SOURCE)/target/allocation-assistant-1.0-SNAPSHOT-allinone.jar" $@

@@ -1,4 +1,4 @@
-package de.tuberlin.cit.allocationassistant.prediction
+package de.tuberlin.cit.prediction
 
 import breeze.linalg.{DenseVector, unique}
 

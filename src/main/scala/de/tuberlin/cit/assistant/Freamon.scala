@@ -1,4 +1,4 @@
-package de.tuberlin.cit.allocationassistant
+package de.tuberlin.cit.assistant
 
 import akka.actor.{ActorSystem, Address}
 import akka.pattern.ask

@@ -1,4 +1,4 @@
-package de.tuberlin.cit.allocationassistant.prediction
+package de.tuberlin.cit.prediction
 
 import breeze.linalg.{DenseVector, convert}
 
@@ -28,6 +28,7 @@ class ScaleOutPredictor {
     val xPredict = DenseVector.range(minScaleOut, maxScaleOut+1)
 
     // subdivide the scaleout range into interpolation and extrapolation
+    // FIXME wrong interpolation mask
     val interpolationMask = (xPredict :>= minScaleOut) :& (xPredict :<= maxScaleOut)
     val xPredictInterpolation = xPredict(interpolationMask).toDenseVector
     val xPredictExtrapolation = xPredict(!interpolationMask).toDenseVector

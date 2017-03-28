@@ -1,4 +1,4 @@
-package de.tuberlin.cit.allocationassistant
+package de.tuberlin.cit.assistant
 
 class SparkRunner(options: Options, freamon: Freamon) extends CommandRunner(options, freamon) {
   override val framework: Symbol = 'Spark

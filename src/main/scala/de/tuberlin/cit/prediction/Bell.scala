@@ -1,11 +1,7 @@
-package de.tuberlin.cit.allocationassistant.prediction
-
-import java.io.{File, FilenameFilter}
+package de.tuberlin.cit.prediction
 
 import breeze.linalg.{*, DenseVector, argmin, linspace, sum}
 import breeze.numerics.abs
-
-import scala.io.{BufferedSource, Source}
 
 class Bell extends UnivariatePredictor {
   var bestModel: UnivariatePredictor = _
