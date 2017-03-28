@@ -28,7 +28,10 @@ object SparkTest {
     val listener = new StageScaleOutPredictor(
       sparkContext,
       appSignature,
-      conf)
+      conf.minContainers(),
+      conf.maxContainers(),
+      conf.maxRuntime().toInt,
+      conf.adaptive())
     sparkContext.addSparkListener(listener)
 
     val trainingSet = getTrainingSet(sparkContext, 2000000, 20).cache()

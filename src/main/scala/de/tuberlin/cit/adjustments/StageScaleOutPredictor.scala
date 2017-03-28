@@ -13,13 +13,11 @@ import scala.language.postfixOps
 class StageScaleOutPredictor(
                               sparkContext: SparkContext,
                               appSignature: String,
-                              conf: Args
+                              minExecutors: Int,
+                              maxExecutors: Int,
+                              targetRuntimeMs: Int,
+                              isAdaptive: Boolean
                             ) extends SparkListener {
-
-  private val minExecutors = conf.minContainers()
-  private val maxExecutors = conf.maxContainers()
-  private val targetRuntime = conf.maxRuntime()
-  private val isAdaptive = conf.adaptive()
 
   private var appEventId: Long = _
   private var appStartTime: Long = _
@@ -43,7 +41,7 @@ class StageScaleOutPredictor(
       case 1 => halfExecutors
       case 2 =>
 
-        if (runtimes.sorted.head < targetRuntime) {
+        if (runtimes.sorted.head < targetRuntimeMs) {
           (minExecutors + halfExecutors) / 2
         } else {
           (halfExecutors + maxExecutors) / 2
@@ -228,7 +226,7 @@ class StageScaleOutPredictor(
 
 //    // check if current scale-out can fulfill the target runtime constraint
 //    // TODO currently, the rescaling only happens if the remaining runtime prediction *exceeds* the constraint
-    val remainingTargetRuntime = targetRuntime - (System.currentTimeMillis() - appStartTime)
+    val remainingTargetRuntime = targetRuntimeMs - (System.currentTimeMillis() - appStartTime)
     if (remainingRuntimes(scaleOut - 1) > remainingTargetRuntime * 1.05) {
       val nextScaleOut = remainingRuntimes.findAll(_ < remainingTargetRuntime * .9)
         .sorted
