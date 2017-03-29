@@ -41,7 +41,7 @@ class StageScaleOutPredictor(
       case 1 => halfExecutors
       case 2 =>
 
-        if (runtimes.sorted.head < targetRuntimeMs) {
+        if (runtimes.sorted.last < targetRuntimeMs) {
           (minExecutors + halfExecutors) / 2
         } else {
           (halfExecutors + maxExecutors) / 2
@@ -103,7 +103,7 @@ class StageScaleOutPredictor(
     val xPredict = DenseVector.range(minExecutors, maxExecutors + 1)
 
     // subdivide the scaleout range into interpolation and extrapolation
-    val interpolationMask: BitVector = (xPredict >:= min(scaleOuts)) &:& (xPredict <:= max(scaleOuts))
+    val interpolationMask: BitVector = (xPredict :>= min(scaleOuts)) :& (xPredict :<= max(scaleOuts))
     val xPredictInterpolation = xPredict(interpolationMask).toDenseVector
     val xPredictExtrapolation = xPredict(!interpolationMask).toDenseVector
 

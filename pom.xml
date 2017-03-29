@@ -102,7 +102,7 @@
         <dependency>
             <groupId>org.scalanlp</groupId>
             <artifactId>breeze_${scala.tools.version}</artifactId>
-            <version>0.13</version>
+            <version>0.12</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe</groupId>
