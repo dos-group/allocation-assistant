@@ -52,10 +52,16 @@ class StageScaleOutPredictor(
         val predictedScaleOuts = (minExecutors to maxExecutors).toArray
         val predictedRuntimes = computePredictions(scaleOuts, runtimes)
 
-        val scaleOutIndex = argmax(predictedRuntimes)
-        val initialScaleOut = predictedScaleOuts(scaleOutIndex)
+        val candidateScaleOuts = (predictedScaleOuts zip predictedRuntimes)
+          .filter(_._2 < targetRuntimeMs)
+          .map(_._1)
 
-        initialScaleOut
+        if (candidateScaleOuts.isEmpty) {
+          maxExecutors
+        } else {
+          candidateScaleOuts.min
+        }
+
     }
 
 
