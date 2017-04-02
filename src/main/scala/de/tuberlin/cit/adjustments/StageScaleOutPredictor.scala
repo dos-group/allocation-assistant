@@ -3,6 +3,7 @@ package de.tuberlin.cit.adjustments
 import java.util.Date
 
 import breeze.linalg._
+import com.typesafe.config.Config
 import de.tuberlin.cit.prediction.{Bell, Ernest, UnivariatePredictor}
 import org.apache.spark.SparkContext
 import org.apache.spark.scheduler._
@@ -13,6 +14,7 @@ import scala.language.postfixOps
 class StageScaleOutPredictor(
                               sparkContext: SparkContext,
                               appSignature: String,
+                              dbPath: String,
                               minExecutors: Int,
                               maxExecutors: Int,
                               targetRuntimeMs: Int,
@@ -24,7 +26,7 @@ class StageScaleOutPredictor(
   private var jobStartTime: Long = _
 
   Class.forName("org.h2.Driver")
-  ConnectionPool.singleton("jdbc:h2:./target/bell", "sa", "")
+  ConnectionPool.singleton(s"jdbc:h2:$dbPath", "sa", "")
 
   private var scaleOut = computeInitialScaleOut()
   println(s"Using initial scale-out of $scaleOut.")

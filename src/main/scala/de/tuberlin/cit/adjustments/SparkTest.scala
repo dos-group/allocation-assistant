@@ -28,6 +28,7 @@ object SparkTest {
     val listener = new StageScaleOutPredictor(
       sparkContext,
       appSignature,
+      conf.dbPath(),
       conf.minContainers(),
       conf.maxContainers(),
       conf.maxRuntime().toInt,

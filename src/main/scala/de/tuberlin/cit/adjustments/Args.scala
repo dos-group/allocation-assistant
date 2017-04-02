@@ -16,6 +16,7 @@ class Args(a: Seq[String]) extends ScallopConf(a) {
     case other => super.onError(e)
   }
 
+  val dbPath = opt[String](name = "db", noshort = true, descr = "Path to the H2 database", default = Some("./target/bell"))
 //  val config = opt[String](required = true,
 //    descr = "Path to the .conf file")
 //
