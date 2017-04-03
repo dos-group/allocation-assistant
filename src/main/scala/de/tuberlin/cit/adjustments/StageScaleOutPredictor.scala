@@ -25,13 +25,15 @@ class StageScaleOutPredictor(
   private var appStartTime: Long = _
   private var jobStartTime: Long = _
 
+  private var scaleOut: Int = _
+
   Class.forName("org.h2.Driver")
   ConnectionPool.singleton(s"jdbc:h2:$dbPath", "sa", "")
 
-  private var scaleOut = computeInitialScaleOut()
+  scaleOut = computeInitialScaleOut()
   println(s"Using initial scale-out of $scaleOut.")
 
-  sparkContext.requestTotalExecutors(scaleOut, 0, null)
+  sparkContext.requestTotalExecutors(scaleOut, 0, Map[String,Int]())
 
   def computeInitialScaleOut(): Int = {
     val (scaleOuts, runtimes) = getNonAdaptiveRuns(appSignature)
