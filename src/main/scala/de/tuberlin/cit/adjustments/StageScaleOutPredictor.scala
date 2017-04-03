@@ -76,7 +76,7 @@ class StageScaleOutPredictor(
       sql"""
       SELECT STARTED_AT, SCALE_OUT, DURATION_MS
       FROM APP_EVENT JOIN JOB_EVENT ON APP_EVENT.ID = JOB_EVENT.APP_EVENT_ID
-      WHERE APP_ID = $appSignature AND FINISHED_AT IS NOT NULL;
+      WHERE APP_ID = $appSignature;
       """.map({ rs =>
         val startedAt = rs.timestamp("started_at")
         val scaleOut = rs.int("scale_out")
@@ -142,17 +142,17 @@ class StageScaleOutPredictor(
     yPredict.map(_.toInt).toArray
   }
 
-  override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
-
-    DB localTx { implicit session =>
-      sql"""
-      UPDATE app_event
-      SET finished_at = CURRENT_TIMESTAMP()
-      WHERE id = ${appEventId};
-      """.update().apply()
-    }
-
-  }
+//  override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
+//
+//    DB localTx { implicit session =>
+//      sql"""
+//      UPDATE app_event
+//      SET finished_at = CURRENT_TIMESTAMP()
+//      WHERE id = ${appEventId};
+//      """.update().apply()
+//    }
+//
+//  }
 
   override def onJobStart(jobStart: SparkListenerJobStart): Unit = {
     //    println(s"Job ${jobStart.jobId} started.")
