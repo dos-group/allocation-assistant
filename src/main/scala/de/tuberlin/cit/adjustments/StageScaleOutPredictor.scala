@@ -247,7 +247,7 @@ class StageScaleOutPredictor(
 
       if (nextScaleOut != scaleOut) {
         println(s"Adjusting scale-out to $nextScaleOut after job $jobId")
-        sparkContext.requestTotalExecutors(nextScaleOut, 0, null)
+        sparkContext.requestTotalExecutors(nextScaleOut, 0, Map[String,Int]())
         scaleOut = nextScaleOut
       }
     }
