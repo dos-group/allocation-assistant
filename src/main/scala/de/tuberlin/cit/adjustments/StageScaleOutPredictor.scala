@@ -155,7 +155,7 @@ class StageScaleOutPredictor(
 //  }
 
   override def onJobStart(jobStart: SparkListenerJobStart): Unit = {
-    //    println(s"Job ${jobStart.jobId} started.")
+    println(s"Job ${jobStart.jobId} started.")
     jobStartTime = System.currentTimeMillis()
 
     if (appStartTime == 0) {
@@ -180,7 +180,7 @@ class StageScaleOutPredictor(
 
   override def onJobEnd(jobEnd: SparkListenerJobEnd): Unit = {
     val jobDuration = System.currentTimeMillis() - jobStartTime
-    //    println(s"Job ${jobEnd.jobId} finished in $jobDuration ms.")
+    println(s"Job ${jobEnd.jobId} finished in $jobDuration ms.")
 
     DB localTx { implicit session =>
       sql"""
@@ -248,7 +248,7 @@ class StageScaleOutPredictor(
         .getOrElse(argmin(remainingRuntimes))
 
       if (nextScaleOut != scaleOut) {
-        println(s"Adjusting scale-out to $nextScaleOut after job $jobId")
+        println(s"Adjusting scale-out to $nextScaleOut after job $jobId.")
         sparkContext.requestTotalExecutors(nextScaleOut, 0, Map[String,Int]())
         scaleOut = nextScaleOut
       }
