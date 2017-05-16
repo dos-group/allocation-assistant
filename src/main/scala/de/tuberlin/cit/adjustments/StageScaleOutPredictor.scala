@@ -54,7 +54,7 @@ class StageScaleOutPredictor(
       case _ =>
 
         val predictedScaleOuts = (minExecutors to maxExecutors).toArray
-        val predictedRuntimes = computePredictions(scaleOuts, runtimes)
+        val predictedRuntimes = computePredictions(scaleOuts, runtimes, predictedScaleOuts)
 
         val candidateScaleOuts = (predictedScaleOuts zip predictedRuntimes)
           .filter(_._2 < targetRuntimeMs)
@@ -105,12 +105,12 @@ class StageScaleOutPredictor(
     (scaleOuts, runtimes)
   }
 
-  def computePredictions(scaleOuts: Array[Int], runtimes: Array[Int]): Array[Int] = {
+  def computePredictions(scaleOuts: Array[Int], runtimes: Array[Int], predictedScaleOuts: Array[Int]): Array[Int] = {
     val x = convert(DenseVector(scaleOuts), Double)
     val y = convert(DenseVector(runtimes), Double)
 
     // calculate the range over which the runtimes must be predicted
-    val xPredict = DenseVector.range(minExecutors, maxExecutors + 1)
+    val xPredict = DenseVector(predictedScaleOuts)
 
     // subdivide the scaleout range into interpolation and extrapolation
     val interpolationMask: BitVector = (xPredict :>= min(scaleOuts)) :& (xPredict :<= max(scaleOuts))
@@ -220,25 +220,27 @@ class StageScaleOutPredictor(
     val jobRuntimeData: Map[Int, List[(Int, Int, Int)]] = result.groupBy(_._1)
 
     // calculate the prediction for the remaining runtime depending on scale-out
+    val predictedScaleOuts = (minExecutors to maxExecutors).toArray
     val remainingRuntimes = jobRuntimeData.keys
       .map(jobId => {
 
         val (x, y) = jobRuntimeData(jobId).map(t => (t._2, t._3)).toArray.unzip
-        //        println(s"Job: $jobId")
+//                println(s"Job: $jobId")
         //        println(s"""${x.mkString(",")}""")
         //        println(s"""${y.mkString(",")}""")
 
-        val yPredict: Array[Int] = computePredictions(x, y)
-        //        println(s"""${yPredict.mkString(",")}""")
-        DenseVector(yPredict)
+        val predictedRuntimes: Array[Int] = computePredictions(x, y, predictedScaleOuts)
+        //        println(s"""${predictedRuntimes.mkString(",")}""")
+        DenseVector(predictedRuntimes)
       })
-      .fold(DenseVector.zeros[Int](maxExecutors + 1 - minExecutors))(_ + _)
+      .fold(DenseVector.zeros[Int](predictedScaleOuts.length))(_ + _)
 
-//    // check if current scale-out can fulfill the target runtime constraint
-//    // TODO currently, the rescaling only happens if the remaining runtime prediction *exceeds* the constraint
+    // check if current scale-out can fulfill the target runtime constraint
+    // TODO currently, the rescaling only happens if the remaining runtime prediction *exceeds* the constraint
+    // TODO also: only relative slack is used atm
     val remainingTargetRuntime = targetRuntimeMs - (System.currentTimeMillis() - appStartTime)
     if (remainingRuntimes(scaleOut - 1) > remainingTargetRuntime * 1.05) {
-      val nextScaleOut = remainingRuntimes.findAll(_ < remainingTargetRuntime * .9)
+      val nextScaleOutIndex = remainingRuntimes.findAll(_ < remainingTargetRuntime * .9)
         .sorted
         .headOption
         // TODO if there is no scale-out fulfilling the constraint, the scale-out with the lowest prediction is taken
@@ -246,6 +248,7 @@ class StageScaleOutPredictor(
         // TODO (1) take always the max scale-out
         // TODO (2) check if it makes sense changing scale-out
         .getOrElse(argmin(remainingRuntimes))
+      val nextScaleOut = predictedScaleOuts(nextScaleOutIndex)
 
       if (nextScaleOut != scaleOut) {
         println(s"Adjusting scale-out to $nextScaleOut after job $jobId.")
