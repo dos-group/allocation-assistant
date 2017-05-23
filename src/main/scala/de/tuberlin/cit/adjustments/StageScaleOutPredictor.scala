@@ -26,11 +26,13 @@ class StageScaleOutPredictor(
   private var jobStartTime: Long = _
 
   private var scaleOut: Int = _
+  private var nextScaleOut: Int = _
 
   Class.forName("org.h2.Driver")
   ConnectionPool.singleton(s"jdbc:h2:$dbPath", "sa", "")
 
   scaleOut = computeInitialScaleOut()
+  nextScaleOut = scaleOut
   println(s"Using initial scale-out of $scaleOut.")
 
   sparkContext.requestTotalExecutors(scaleOut, 0, Map[String,Int]())
@@ -180,7 +182,7 @@ class StageScaleOutPredictor(
 
   override def onJobEnd(jobEnd: SparkListenerJobEnd): Unit = {
     val jobDuration = System.currentTimeMillis() - jobStartTime
-    println(s"Job ${jobEnd.jobId} finished in $jobDuration ms.")
+    println(s"Job ${jobEnd.jobId} finished in $jobDuration ms with $scaleOut nodes.")
 
     DB localTx { implicit session =>
       sql"""
@@ -199,8 +201,15 @@ class StageScaleOutPredictor(
       """.update().apply()
     }
 
+    if (nextScaleOut != scaleOut) {
+      scaleOut = nextScaleOut
+    }
+
     if (isAdaptive) {
-      updateScaleOut(jobEnd.jobId)
+      val (scaleOuts, runtimes) = getNonAdaptiveRuns(appSignature)
+      if (scaleOuts.length > 3) { // do not scale adaptively for the bootstrap runs
+        updateScaleOut(jobEnd.jobId)
+      }
     }
 
   }
@@ -220,6 +229,7 @@ class StageScaleOutPredictor(
     val jobRuntimeData: Map[Int, List[(Int, Int, Int)]] = result.groupBy(_._1)
 
     // calculate the prediction for the remaining runtime depending on scale-out
+    // TODO do not consider next job since we cannot scale that quickly
     val predictedScaleOuts = (minExecutors to maxExecutors).toArray
     val remainingRuntimes = jobRuntimeData.keys
       .map(jobId => {
@@ -253,7 +263,7 @@ class StageScaleOutPredictor(
       if (nextScaleOut != scaleOut) {
         println(s"Adjusting scale-out to $nextScaleOut after job $jobId.")
         sparkContext.requestTotalExecutors(nextScaleOut, 0, Map[String,Int]())
-        scaleOut = nextScaleOut
+        this.nextScaleOut = nextScaleOut
       }
     }
 
