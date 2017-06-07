@@ -3,7 +3,6 @@ package de.tuberlin.cit.adjustments
 import java.util.Date
 
 import breeze.linalg._
-import com.typesafe.config.Config
 import de.tuberlin.cit.prediction.{Bell, Ernest, UnivariatePredictor}
 import org.apache.spark.SparkContext
 import org.apache.spark.scheduler._
@@ -144,22 +143,24 @@ class StageScaleOutPredictor(
     yPredict.map(_.toInt).toArray
   }
 
-//  override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
-//
-//    DB localTx { implicit session =>
-//      sql"""
-//      UPDATE app_event
-//      SET finished_at = CURRENT_TIMESTAMP()
-//      WHERE id = ${appEventId};
-//      """.update().apply()
-//    }
-//
-//  }
+  override def onApplicationEnd(applicationEnd: SparkListenerApplicationEnd): Unit = {
+
+    DB localTx { implicit session =>
+      sql"""
+      UPDATE app_event
+      SET finished_at = CURRENT_TIMESTAMP()
+      WHERE id = ${appEventId};
+      """.update().apply()
+    }
+
+  }
 
   override def onJobStart(jobStart: SparkListenerJobStart): Unit = {
     println(s"Job ${jobStart.jobId} started.")
     jobStartTime = System.currentTimeMillis()
 
+    // https://stackoverflow.com/questions/29169981/why-is-sparklistenerapplicationstart-never-fired
+    // onApplicationStart workaround
     if (appStartTime == 0) {
       appStartTime = jobStartTime
 
@@ -181,7 +182,8 @@ class StageScaleOutPredictor(
   }
 
   override def onJobEnd(jobEnd: SparkListenerJobEnd): Unit = {
-    val jobDuration = System.currentTimeMillis() - jobStartTime
+    val jobEndTime = System.currentTimeMillis()
+    val jobDuration = jobEndTime - jobStartTime
     println(s"Job ${jobEnd.jobId} finished in $jobDuration ms with $scaleOut nodes.")
 
     DB localTx { implicit session =>
@@ -189,12 +191,16 @@ class StageScaleOutPredictor(
       INSERT INTO job_event (
         app_event_id,
         job_id,
+        started_at,
+        finished_at,
         duration_ms,
         scale_out
       )
       VALUES (
         ${appEventId},
         ${jobEnd.jobId},
+        ${new Date(jobStartTime)},
+        ${new Date(jobEndTime)},
         ${jobDuration},
         ${scaleOut}
       );
@@ -217,8 +223,10 @@ class StageScaleOutPredictor(
   def updateScaleOut(jobId: Int): Unit = {
     val result = DB readOnly { implicit session =>
       sql"""
-      SELECT JOB_ID, SCALE_OUT, DURATION_MS FROM APP_EVENT JOIN JOB_EVENT ON APP_EVENT.ID = JOB_EVENT.APP_EVENT_ID
-      WHERE APP_ID = ${appSignature} AND JOB_ID > ${jobId};
+      SELECT JOB_ID, SCALE_OUT, DURATION_MS
+      FROM APP_EVENT JOIN JOB_EVENT ON APP_EVENT.ID = JOB_EVENT.APP_EVENT_ID
+      WHERE APP_ID = ${appSignature}
+      ORDER BY JOB_ID;
       """.map({ rs =>
         val jobId = rs.int("job_id")
         val scaleOut = rs.int("scale_out")
@@ -229,39 +237,47 @@ class StageScaleOutPredictor(
     val jobRuntimeData: Map[Int, List[(Int, Int, Int)]] = result.groupBy(_._1)
 
     // calculate the prediction for the remaining runtime depending on scale-out
-    // TODO do not consider next job since we cannot scale that quickly
     val predictedScaleOuts = (minExecutors to maxExecutors).toArray
-    val remainingRuntimes = jobRuntimeData.keys
+    val remainingRuntimes: Array[DenseVector[Int]] = jobRuntimeData.keys
+      .toArray
+      .filter(_ > jobId)
+      .sorted
       .map(jobId => {
-
         val (x, y) = jobRuntimeData(jobId).map(t => (t._2, t._3)).toArray.unzip
-//                println(s"Job: $jobId")
-        //        println(s"""${x.mkString(",")}""")
-        //        println(s"""${y.mkString(",")}""")
-
         val predictedRuntimes: Array[Int] = computePredictions(x, y, predictedScaleOuts)
-        //        println(s"""${predictedRuntimes.mkString(",")}""")
         DenseVector(predictedRuntimes)
       })
-      .fold(DenseVector.zeros[Int](predictedScaleOuts.length))(_ + _)
+
+    if (remainingRuntimes.length <= 1) {
+      return
+    }
+    val nextJobId = jobRuntimeData.keys.toArray.sorted.head
+
+    // predicted runtimes of the next job
+    val nextJobRuntimes = remainingRuntimes.head
+    // predicted runtimes sum of the jobs *after* the next job
+    val futureJobsRuntimes = remainingRuntimes.drop(1).fold(DenseVector.zeros[Int](predictedScaleOuts.length))(_ + _)
+
+    val currentRuntime = System.currentTimeMillis() - appStartTime
+    println(s"Current runtime: $currentRuntime")
+    val nextJobRuntime = nextJobRuntimes.valueAt(scaleOut - minExecutors)
+    println(s"Next job runtime prediction: $nextJobRuntime")
+    val remainingTargetRuntime = targetRuntimeMs - currentRuntime - nextJobRuntime
+    println(s"Remaining runtime: $remainingTargetRuntime")
 
     // check if current scale-out can fulfill the target runtime constraint
     // TODO currently, the rescaling only happens if the remaining runtime prediction *exceeds* the constraint
-    // TODO also: only relative slack is used atm
-    val remainingTargetRuntime = targetRuntimeMs - (System.currentTimeMillis() - appStartTime)
-    if (remainingRuntimes(scaleOut - 1) > remainingTargetRuntime * 1.05) {
-      val nextScaleOutIndex = remainingRuntimes.findAll(_ < remainingTargetRuntime * .9)
+    val relativeSlack = 1.05
+    val absoluteSlack = 0
+    if (futureJobsRuntimes(scaleOut - minExecutors) > remainingTargetRuntime * relativeSlack + absoluteSlack) {
+      val nextScaleOutIndex = futureJobsRuntimes.findAll(_ < remainingTargetRuntime * .9)
         .sorted
         .headOption
-        // TODO if there is no scale-out fulfilling the constraint, the scale-out with the lowest prediction is taken
-        // TODO however, two additions might be considered:
-        // TODO (1) take always the max scale-out
-        // TODO (2) check if it makes sense changing scale-out
-        .getOrElse(argmin(remainingRuntimes))
+        .getOrElse(argmin(futureJobsRuntimes))
       val nextScaleOut = predictedScaleOuts(nextScaleOutIndex)
 
       if (nextScaleOut != scaleOut) {
-        println(s"Adjusting scale-out to $nextScaleOut after job $jobId.")
+        println(s"Adjusting scale-out to $nextScaleOut after job $nextJobId.")
         sparkContext.requestTotalExecutors(nextScaleOut, 0, Map[String,Int]())
         this.nextScaleOut = nextScaleOut
       }
