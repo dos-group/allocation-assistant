@@ -75,7 +75,7 @@ class StageScaleOutPredictor(
   def getNonAdaptiveRuns(appSignature: String): (Array[Int], Array[Int]) = {
     val result = DB readOnly { implicit session =>
       sql"""
-      SELECT STARTED_AT, SCALE_OUT, DURATION_MS
+      SELECT APP_EVENT.STARTED_AT, SCALE_OUT, DURATION_MS
       FROM APP_EVENT JOIN JOB_EVENT ON APP_EVENT.ID = JOB_EVENT.APP_EVENT_ID
       WHERE APP_ID = $appSignature;
       """.map({ rs =>
@@ -260,7 +260,7 @@ class StageScaleOutPredictor(
 
     val currentRuntime = System.currentTimeMillis() - appStartTime
     println(s"Current runtime: $currentRuntime")
-    val nextJobRuntime = nextJobRuntimes.valueAt(scaleOut - minExecutors)
+    val nextJobRuntime = nextJobRuntimes(scaleOut - minExecutors)
     println(s"Next job runtime prediction: $nextJobRuntime")
     val remainingTargetRuntime = targetRuntimeMs - currentRuntime - nextJobRuntime
     println(s"Remaining runtime: $remainingTargetRuntime")
