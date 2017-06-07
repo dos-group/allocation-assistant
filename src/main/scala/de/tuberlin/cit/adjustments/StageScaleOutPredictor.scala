@@ -264,12 +264,14 @@ class StageScaleOutPredictor(
     println(s"Next job runtime prediction: $nextJobRuntime")
     val remainingTargetRuntime = targetRuntimeMs - currentRuntime - nextJobRuntime
     println(s"Remaining runtime: $remainingTargetRuntime")
+    val remainingRuntimePrediction = futureJobsRuntimes(scaleOut - minExecutors)
+    println(s"Remaining runtime prediction: $remainingRuntimePrediction")
 
     // check if current scale-out can fulfill the target runtime constraint
     // TODO currently, the rescaling only happens if the remaining runtime prediction *exceeds* the constraint
     val relativeSlack = 1.05
     val absoluteSlack = 0
-    if (futureJobsRuntimes(scaleOut - minExecutors) > remainingTargetRuntime * relativeSlack + absoluteSlack) {
+    if (remainingRuntimePrediction > remainingTargetRuntime * relativeSlack + absoluteSlack) {
       val nextScaleOutIndex = futureJobsRuntimes.findAll(_ < remainingTargetRuntime * .9)
         .sorted
         .headOption
